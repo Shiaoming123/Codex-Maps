@@ -170,4 +170,25 @@ describe("Standalone Map Reader HTTP boundary", () => {
       await reader.close();
     }
   });
+
+  it("sends the latest complete snapshot to a newly connected SSE client", async () => {
+    const source = sourceFor(snapshot());
+    source.publish({
+      ...snapshot(),
+      version: { sourceId: "standalone-test", epoch: 1, revision: 4 },
+      sessions: [],
+    });
+    const reader = await createTestReader(source);
+
+    try {
+      const response = await fetch(`${reader.url}/api/events`);
+      const stream = response.body?.getReader();
+      expect(stream).toBeDefined();
+      const first = await stream?.read();
+      expect(new TextDecoder().decode(first?.value)).toContain('"revision":4');
+      await stream?.cancel();
+    } finally {
+      await reader.close();
+    }
+  });
 });

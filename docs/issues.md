@@ -48,7 +48,7 @@
 
 验收：running、waiting、idle、failed 与 goal 状态在两个窗口一致；事件到 UI 的本机 P95 目标小于 1 秒；断线、重连和数据陈旧有可见提示。
 
-当前进展：Windows 本机 JSONL 兼容模式已通过真实只读 smoke；以 1 秒间隔检查变化文件，状态事件映射为 running/completed/interrupted，读取失败会保留最后完整快照并标 stale。首次历史索引后，1,454 个 session 的两个刷新窗口 CPU 约 16ms。
+当前进展：Windows 本机 JSONL 兼容模式已通过真实只读 smoke；以 1 秒间隔检查变化文件，状态事件映射为 running/completed/interrupted，读取失败会保留最后完整快照并标 stale，目录恢复后重新进入 ready；不变文件不增加 revision，新 SSE 客户端直接获得最新完整快照。首次历史索引后，1,454 个 session 的两个刷新窗口 CPU 约 16ms。
 
 当前缺口：尚未测得端到端 P95；`waiting`、`idle`、`failed`、goal/plan、跨窗口一致性没有稳定的当前 Desktop 来源。macOS/Linux 的文件路径与追加行为也未做实机验收。
 

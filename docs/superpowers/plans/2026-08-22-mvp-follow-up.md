@@ -98,11 +98,11 @@
 - Every compatible snapshot reports source freshness through existing `sync` plus a bounded `updatedAt`/last-observed timestamp.
 - SSE reconnect always receives a complete latest snapshot; no event replay or raw JSONL transport is added.
 
-- [ ] Write tests for a refresh failure, recovery, truncated append, and duplicate unchanged refresh with no revision increment.
-- [ ] Implement failure/recovery transitions and preserve the last good sessions.
-- [ ] Show the last successful observation time and distinguish loading, ready, stale, and browser transport error.
-- [ ] Run `pnpm verify` and an SSE reconnect smoke.
-- [ ] Record the measured update latency and commit `feat: harden compatibility freshness`.
+- [x] Write tests for a refresh failure, recovery, truncated append, and duplicate unchanged refresh with no revision increment.
+- [x] Implement failure/recovery transitions and preserve the last good sessions.
+- [x] Show the last successful observation time and distinguish loading, ready, stale, and browser transport error.
+- [x] Run `pnpm verify` and an SSE reconnect smoke.
+- [x] Record the measured update latency and commit `feat: harden compatibility freshness`.
 
 ### Task 5: Keep official-data features behind explicit capability gates
 
@@ -165,4 +165,4 @@
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 4.
+- Current execution point: Task 5.

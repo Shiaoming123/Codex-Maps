@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendFile, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -217,6 +217,58 @@ describe("projectFilesystemCompatJsonl", () => {
       await emptyModule.dispose();
       await unreadableModule.dispose();
       await rm(emptyDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("does not publish a new revision when unchanged files are rescanned", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codex-maps-unchanged-"));
+    await writeFile(
+      join(directory, "rollout-unchanged.jsonl"),
+      '{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-unchanged"}}',
+    );
+    const module = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: directory,
+      sourceId: "filesystem-unchanged-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const source = module.observe({ kind: "overview" });
+      await expect.poll(() => source.getSnapshot().sync.phase, { timeout: 1_000 })
+        .toBe("ready");
+      const revision = source.getSnapshot().version.revision;
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(source.getSnapshot().version.revision).toBe(revision);
+    } finally {
+      await module.dispose();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("recovers from an unreadable directory without losing the source", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codex-maps-recovery-"));
+    await rm(directory, { recursive: true, force: true });
+    const module = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: directory,
+      sourceId: "filesystem-recovery-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const source = module.observe({ kind: "overview" });
+      await expect.poll(() => source.getSnapshot().sync.phase, { timeout: 1_000 })
+        .toBe("stale");
+      await mkdir(directory);
+      await writeFile(
+        join(directory, "rollout-recovered.jsonl"),
+        '{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-recovered"}}',
+      );
+      await expect.poll(() => source.getSnapshot().sync.phase, { timeout: 1_000 })
+        .toBe("ready");
+      expect(source.getSnapshot().sessions).toHaveLength(1);
+    } finally {
+      await module.dispose();
+      await rm(directory, { recursive: true, force: true });
     }
   });
 });

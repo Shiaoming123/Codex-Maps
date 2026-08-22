@@ -266,6 +266,7 @@ pnpm start:desktop (token hardening rerun)
 - 默认 standalone/Electron 使用该模式；`CODEX_MAPS_SOURCE=app-server` 可显式保留旧的独立 App Server 诊断路径。
 - UI 新增已完成、已中断状态与来源说明；session 标题以短 id 显示，正文不进入页面。
 - 接入可选的本机 `session_index.jsonl` 标题索引；真实 smoke 覆盖 1,454 条 session，其中 1,421 条有可读标题，33 条回退短 ID；500 条合成 session 完整索引通过。
+- 补充 unchanged-rescan、目录恢复和 SSE 新连接验收；不变文件不增加 revision，目录恢复后回到 ready，新 SSE 客户端直接收到最新完整快照。
 - 合成测试、临时文件追加测试、全量 `pnpm verify` 与本机只读 smoke 已通过。
 
 ### 待办与风险
