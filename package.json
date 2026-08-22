@@ -1,0 +1,19 @@
+{
+  "name": "codex-maps",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "test": "vitest run",
+    "test:python": "python -m unittest discover -s tests",
+    "test:smoke:app-server": "vitest run packages/session-map/test/real-app-server.smoke.test.ts",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm typecheck && pnpm test && pnpm test:python"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,12 +1,39 @@
 # Codex Maps MVP 实施计划
 
-**目标：** 交付一个真正可用的 Codex 会话管理 MVP：在 Codex 内嵌页和副屏独立窗口中，以同一份实时数据查看、定位和安全管理会话。
+**目标：** 先交付一个真正可用的 Session 地图核心与独立管理器；Codex 原生内嵌页和共享副屏作为单独的宿主集成门禁，不在缺少受支持挂载 API 时伪装成交付。
 
 **架构：** Codex 当前宿主及其 App Server 是唯一会话事件源；宿主适配层把同一份快照、事件和命令能力暴露给共享状态仓库，再由内嵌页与副屏窗口消费。核心领域模型、事件归并和 UI 保持跨平台，壳层注入、进程、路径及打包能力按操作系统隔离。
 
-**技术栈：** TypeScript、React、Electron、Codex App Server JSON-RPC、Electron IPC/preload bridge、Vitest、Playwright。MVP 的两个窗口由同一个 Electron main process 管理；只有未来确需跨进程时才评估 named pipe 或 Unix domain socket。
+**技术栈：** TypeScript、React、Electron、Codex App Server JSON-RPC、Electron IPC/preload bridge、Vitest、Playwright。独立模式由一个 Electron main process 管理；未来 Native Gate 通过后，内嵌页和副屏也必须由同一个 Host Bridge owner 管理。
 
 **规格：** 本文件的“全局约束”“MVP 范围”和各纵向切片验收条件构成自包含规格。
+
+## 2026-08-22 实施状态
+
+当前结论已能拆开判断：**产品核心 GO；当前 Codex Desktop 原生宿主发布 NO-GO。** Session 地图、关系模型、实时 Store、独立管理器和安全操作语义有公开 App Server 合同支撑，可以继续实施。当前 build 虽存在内部 Bridge，却没有公开插件 route/window 挂载合同，第三方页面也不能自行获得 Codex preload；因此“左侧原生页 + 宿主副屏共享现有 request client”不能进入当前公开 MVP。
+
+已落地：
+
+- `SessionMapModule.observe({ kind: "overview" })` 的稳定快照边界。
+- App Server initialize/initialized、`thread/list` 全量分页、重复边界校验和最小状态归一化。
+- 内存协议适配器、生产 stdio 适配器、跨进程 JSONL 测试和本机无内容 smoke。
+- 目标 Desktop build 生成合同核对；当前稳定合同支持 delete 与 Section，experimental 合同支持项目和 parent/ancestor 关系，原生 pin 仍是 Host Bridge 私有能力。所有写入口在运行时验收前保持 fail-closed。
+- `HostBridgeModule` 合同切片：单 attach、双 renderer lease、同一 snapshot、独立释放、未知 fingerprint fail-closed，以及 exact thread navigation 回执核对。
+- Desktop bundle envelope 探针：确认 `connect-app-host` 由 Codex preload 转发到私有 IPC；官方插件 manifest 没有 native route/window 字段。
+
+尚未落地：
+
+- 受支持的 Codex Desktop 外部挂载点；当前没有公开 route/window API，production adapter 停在 fail-closed。
+- App Server 通知、重连、超时、server request、结构化错误和 mutation 不确定结果语义。
+- 实时 Session Store、React 一级/二级页和任何写操作。
+
+下一批开发改为双轨：核心轨继续完成 CM-002 客户端生命周期、CM-003 Store 和只读地图 UI；宿主轨只维护 fingerprint/能力探针并等待受支持扩展点。独立模式只能对自己拥有的 App Server 声称实时和可写；当 Codex Desktop 是 owner 时显示状态未知并关闭 mutation，不启动第二 App Server 冒充同源。
+
+### 可交付层级
+
+1. **Map Reader（当前可落地）：** 独立只读地图、搜索/分组/关系与详情；对其他进程拥有的活跃状态明确显示 unknown。
+2. **Map Operator（可落地）：** Codex Maps 自己拥有 App Server 的独立模式，提供实时状态与经验证的管理动作。
+3. **Codex Native（当前受阻）：** 左侧入口、精确原生跳转、宿主创建副屏并借用 Desktop request client；只有 Host Integration Gate 重新通过后发布。
 
 ## 全局约束
 
@@ -28,14 +55,15 @@
 
 - 会话列表、分页加载、搜索，以及按项目、置顶、普通、归档和实时状态筛选或分组。
 - 实时展示执行状态；在协议明确提供任务/Goal 状态时，独立展示任务状态。
-- 一级管理页与二级详情页；详情包括当前计划/进度、最近输出概览、Token/上下文用量、父子/分支关系摘要和子 Agent 摘要，缺失字段明确降级。
-- 打开指定会话、重命名、置顶/取消置顶、归档、取消归档和删除。
-- Codex 左侧入口及内嵌页；可拖到副屏的独立窗口；两者共享状态和命令通道。
-- Windows x64 完整支持证据；macOS 第二验证；Linux standalone preview 第三验证；WSL 独立兼容结论。
+- 一级项目泳道管理页（列表/卡片降级）与二级详情页；详情包括当前计划/进度、最近输出概览、Token/上下文用量、父子/分支关系摘要和子 Agent 摘要，缺失字段明确降级。
+- 打开指定会话，以及目标 build 明确支持的重命名、置顶/取消置顶、归档、取消归档和删除；能力缺失时隐藏入口并在兼容矩阵中说明。当前 Desktop 合同允许继续验证删除与项目/Section，置顶仍需宿主侧栏桥接。
+- 独立窗口复用共享核心；原生左侧入口和借用 Desktop 同源的副屏属于 `Codex Native` 门禁，不计入当前公开 MVP 完成度。
+- Windows x64 独立模式支持证据；macOS 第二验证；Linux standalone preview 第三验证；WSL 独立兼容结论。原生宿主支持单独声明。
 
 ### 不包含
 
 - 可编辑的完整关系图、拖拽重组分支或合并会话。
+- 基于对话正文猜测阻塞原因的鱼骨图；MVP+1 仅在有明确等待、审批、错误或依赖事件时启用诊断视图。
 - 跨多台设备、云端同步、多用户协作和远程控制。
 - 直接编辑项目根目录、项目颜色/图标或其他实验性项目 API；MVP 只读取并展示协议明确返回的项目元数据。
 - 同时聚合 Windows 与 WSL 两个独立 Codex 数据源。一个运行实例只允许激活一个会话来源。
@@ -72,7 +100,7 @@
 
 ---
 
-## 切片 0：技术门禁——证明“可注入、可复用、仅一个事件源”
+## 切片 0：宿主集成门禁——证明“可注入、可复用、仅一个事件源”
 
 ### 目标
 
@@ -80,10 +108,10 @@
 
 ### 具体交付
 
-- [ ] 建立宿主能力探针，记录 Codex 版本、平台、架构、目标文件 SHA-256、注入锚点计数、可用 IPC 方法和 App Server 所有权。
-- [ ] 定义 `HostCapabilities` 契约，至少包含 `sourceId`、`canReadThreads`、`canSubscribeEvents`、`canMutateThreads`、`canOpenThread`、`canCreateSideWindow` 和 `injectionFingerprint`。
+- [x] 建立宿主能力探针，记录 Codex 版本、平台、架构、目标文件 SHA-256、可用内部 Bridge 证据和 App Server 所有权。
+- [x] 定义最小 Host Bridge 契约，包含 fingerprint、`session.read`、`thread.navigate`、共享 SnapshotSource、renderer lease 和 owner-only dispose。
 - [ ] 建立版本锁定的注入清单；只有“版本匹配 + 哈希匹配 + 锚点恰好一个 + 宿主契约完整”时才允许注入。
-- [ ] 实现 fail-closed 路径：探针失败时不改宿主文件、不注册入口、不启动副屏、不启动备用 App Server，并生成机器可读诊断报告。
+- [x] 实现核心 fail-closed 合同：未知 fingerprint 在 adapter attach 前拒绝；不注册入口、不启动副屏、不启动备用 App Server。Desktop production adapter 仍未实现，因为当前没有受支持挂载点。
 - [ ] 建立单事件源检测：给 App Server 子进程或现有宿主通道分配稳定 `sourceId`，记录进程 PID/通道 ID，拒绝第二所有者。
 - [ ] 增加脱敏协议录制器，只记录方法名、事件类型、线程假 ID、revision 和时间，不记录用户消息正文或凭据。
 
@@ -100,6 +128,7 @@
 - **通过并进入切片 1：** 受支持 Windows x64 构建通过全部验收，且两个客户端能从同一个 `sourceId` 收到事件。
 - **停止：** 无法复用宿主事件流、必须启动第二 App Server 才能实时更新、或无法稳定识别注入点。此时不得用“两个 App Server 最终一致”作为替代架构，也不得宣称内嵌 MVP 可行。
 - **重新门禁：** Codex 升级后版本或哈希变化，必须回到本切片重新生成兼容清单；旧注入规则默认失效。
+- **2026-08-22 当前判定：** 内存架构验收已通过；Desktop production attach、第二窗口注册和 exact-navigation 回执均未通过，故 `Codex Native` 停止，核心轨继续。
 
 ---
 
@@ -171,9 +200,10 @@
 
 ### 具体交付
 
-- [ ] 一级页展示搜索、项目/置顶/普通/归档筛选、执行状态汇总、需要关注的会话和紧凑会话卡片/列表。
+- [ ] 一级页默认使用项目泳道：项目为稳定泳道，Session 为节点，显示执行状态、目标状态、最近活动和权威关系摘要；同时提供列表/卡片降级，并支持搜索、项目/置顶/普通/归档筛选和需要关注视图。
 - [ ] 状态视觉遵守双轴语义：运行使用动态指示，空闲使用中性状态，失败/阻塞使用可辨识警示，任务完成只来自明确任务状态。
 - [ ] 二级页展示标题、项目、根目录、执行状态、任务状态、计划/进度、最近输出概览、Token/上下文、父线程、分支/子 Agent 摘要和最近更新时间。
+- [ ] 若 parent/ancestor/spawned 关系能力可用，二级页提供最多两层的只读关系树；字段不可用时回退为摘要列表，不根据标题或正文推断连线。
 - [ ] 缺失字段显示“不可用”及原因；不基于消息文本猜测任务进度、子 Agent 数或完成状态。
 - [ ] “在 Codex 中打开”使用宿主提供的精确线程 ID，不以标题搜索替代。
 - [ ] 实现键盘导航、焦点可见性、颜色之外的状态标识、缩放和窄窗口布局。
@@ -290,7 +320,7 @@
 
 ---
 
-## Windows x64 MVP 总体验收门
+## Windows x64 Codex Native 候选总体验收门
 
 只有同时满足以下条件，首发构建才算完成：
 
@@ -298,7 +328,7 @@
 - [ ] 内嵌页和副屏使用相同 `sourceId`，App Server 所有者数量始终为 `1`。
 - [ ] 只读快照无重复、漏项或半快照发布；断线能恢复到一致 revision。
 - [ ] 实时状态不把轮次完成误判为任务完成，两个窗口在每次事件后收敛。
-- [ ] 一级/二级流程、精确打开会话、重命名、置顶/取消置顶、归档、取消归档和受保护删除通过 E2E。
+- [ ] 一级/二级流程、精确打开会话和所有已声明支持的管理操作通过 E2E；目标 build 缺失的能力已隐藏且兼容矩阵准确。
 - [ ] 宿主关闭、IPC 断开、版本升级、写失败和显示器移除均有明确安全降级，不启动备用 App Server。
 - [ ] 核心包在 Windows、macOS、Linux CI 上通过；对 macOS、Linux 和 WSL 的支持声明与各自证据一致。
 

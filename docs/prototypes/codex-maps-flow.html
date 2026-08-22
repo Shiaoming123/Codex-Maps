@@ -2036,8 +2036,8 @@
       <div class="screen" id="relation-map">
         <div class="topbar">
           <div class="brand"><span class="logo"><i data-lucide="git-fork"></i></span>Codex Maps</div>
-          <div class="topnav"><span class="tn-item">Session 详情</span><span class="tn-item active">关系地图</span></div>
-          <div class="top-right"><span class="btn outline sm"><i data-lucide="list"></i>列表视图</span><span class="avatar-sm">S</span></div>
+          <div class="topnav"><span class="tn-item">Session 详情</span><span class="tn-item active">关系树</span><span class="tn-item">鱼骨诊断</span></div>
+          <div class="top-right"><span class="btn outline sm"><i data-lucide="list"></i>列表降级</span><span class="avatar-sm">S</span></div>
         </div>
         <div class="shell">
           <div class="sidebar">
@@ -2051,20 +2051,30 @@
           </div>
           <div class="main">
             <div class="main-hd">
-              <div class="breadcrumb"><span class="crumb">设计 Codex Maps 的 MVP</span><i data-lucide="chevron-right"></i><span class="crumb cur">关系地图</span></div>
-              <div class="hd-row"><div><h2>Session 派生关系</h2><div class="hd-sub">Fork、子 Agent 与状态一图可见</div></div><div class="hd-actions"><span class="fb-pill"><i data-lucide="clock"></i>实时</span></div></div>
+              <div class="breadcrumb"><span class="crumb">设计 Codex Maps 的 MVP</span><i data-lucide="chevron-right"></i><span class="crumb cur">关系树</span></div>
+              <div class="hd-row"><div><h2>Session 派生关系树</h2><div class="hd-sub">从根 Session 向下追踪 Fork、子 Agent 与二次派生</div></div><div class="hd-actions"><span class="fb-pill"><i data-lucide="clock"></i>实时</span><span class="btn ghost sm"><i data-lucide="git-fork"></i>鱼骨诊断</span></div></div>
             </div>
             <div class="main-bd">
-              <div class="panel"><div class="panel-hd"><span class="pt">根 Session</span><span class="pcount">深度 0</span></div><div class="panel-bd"><div class="card" style="margin:0 auto;max-width:620px;"><div class="card-hd"><span class="ct">设计 Codex Maps 的 MVP</span><span class="cell-tag"><span class="dot"></span>运行中</span></div><div class="card-bd">主 Session · 2 个子 Agent · 1 个 Fork · 34% 上下文</div></div></div></div>
-              <div style="text-align:center;color:var(--muted);padding:8px 0;">派生自根 Session · 深度 1</div>
-              <div class="card-grid col3">
-                <div class="card"><div class="card-hd"><span class="ct">Atlas</span><span class="cell-tag muted"><span class="dot"></span>已完成</span></div><div class="card-bd"><strong>App Server 能力核对</strong><div class="hd-sub" style="margin-top:8px;">子 Agent · 直接派生</div></div></div>
-                <div class="card"><div class="card-hd"><span class="ct">Wire</span><span class="cell-tag"><span class="dot"></span>运行中</span></div><div class="card-bd"><strong>页面结构验证</strong><div class="hd-sub" style="margin-top:8px;">子 Agent · 直接派生</div></div></div>
-                <div class="card"><div class="card-hd"><span class="ct">MVP 方案备选</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><strong>从 Turn 8 Fork</strong><div class="hd-sub" style="margin-top:8px;">独立聊天分支</div></div></div>
+              <div class="filterbar"><span class="chip active">全部关系</span><span class="chip">子 Agent</span><span class="chip">用户 Fork</span><span class="fb-pill"><i data-lucide="minus"></i>展开 2 层</span><span class="fb-pill"><i data-lucide="search"></i>定位节点</span></div>
+              <div class="panel">
+                <div class="panel-hd"><span class="pt">派生树</span><span class="pcount">1 根 · 3 个一级分支 · 1 个二级分支</span><span class="pt-right"><span class="cell-tag"><span class="dot"></span>1 个运行中</span></span></div>
+                <div class="panel-bd" style="padding:18px 28px 22px;">
+                  <div class="card" style="margin:0 auto;width:520px;box-shadow:0 0 0 2px var(--ink) inset;">
+                    <div class="card-hd"><span class="ct">设计 Codex Maps 的 MVP</span><span class="cell-tag"><span class="dot"></span>执行中</span></div>
+                    <div class="card-bd"><strong>根 Session · 目标进行中</strong><div class="hd-sub" style="margin-top:6px;">34% 上下文 · 2 子 Agent · 1 Fork · 刚刚更新</div></div>
+                  </div>
+                  <div style="height:24px;border-left:1px solid var(--line);width:1px;margin:0 auto;"></div>
+                  <div style="position:relative;padding-top:24px;">
+                    <div style="position:absolute;left:16.5%;right:16.5%;top:0;border-top:1px solid var(--line);"></div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
+                      <div style="position:relative;"><div style="height:24px;border-left:1px solid var(--line);position:absolute;left:50%;top:-24px;"></div><div class="card" style="margin:0;"><div class="card-hd"><span class="ct">Atlas</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><strong>App Server 能力核对</strong><div class="hd-sub" style="margin-top:8px;">目标完成 · 子 Agent · 深度 1</div></div></div></div>
+                      <div style="position:relative;"><div style="height:24px;border-left:1px solid var(--line);position:absolute;left:50%;top:-24px;"></div><div class="card" style="margin:0;box-shadow:0 0 0 2px var(--ink) inset;"><div class="card-hd"><span class="ct">Wire</span><span class="cell-tag"><span class="dot"></span>执行中</span></div><div class="card-bd"><strong>页面结构验证</strong><div class="hd-sub" style="margin-top:8px;">目标进行中 · 子 Agent · 深度 1</div></div></div><div style="height:18px;border-left:1px solid var(--line);width:1px;margin:0 auto;"></div><div class="card" style="margin:0;"><div class="card-hd"><span class="ct">Visual QA</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><strong>原型协调度检查</strong><div class="hd-sub" style="margin-top:8px;">目标完成 · 由 Wire 派生 · 深度 2</div></div></div></div>
+                      <div style="position:relative;"><div style="height:24px;border-left:1px dashed var(--line);position:absolute;left:50%;top:-24px;"></div><div class="card" style="margin:0;border-style:dashed;"><div class="card-hd"><span class="ct">MVP 方案备选</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><strong>从 Turn 8 Fork</strong><div class="hd-sub" style="margin-top:8px;">目标未声明 · 用户分支 · 深度 1</div></div></div></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div style="text-align:center;color:var(--muted);padding:8px 0;">由 Wire 再派生 · 深度 2</div>
-              <div class="card-grid col3"><div class="card"><div class="card-hd"><span class="ct">Visual QA</span><span class="cell-tag muted"><span class="dot"></span>已完成</span></div><div class="card-bd"><strong>原型协调度检查</strong><div class="hd-sub" style="margin-top:8px;">父节点：Wire</div></div></div></div>
-              <div class="panel"><div class="panel-hd"><span class="pt">地图说明</span></div><div class="panel-bd">实线表示子 Agent 派生，虚线表示用户 Fork；节点状态来自运行事件与目标状态，未知时显示“待确认”。</div></div>
+              <div class="panel"><div class="panel-hd"><span class="pt">图例与降级</span></div><div class="panel-bd"><span style="display:inline-block;width:28px;border-top:1px solid var(--line);vertical-align:middle;margin-right:8px;"></span>子 Agent 派生　<span style="display:inline-block;width:28px;border-top:1px dashed var(--line);vertical-align:middle;margin:0 8px 0 18px;"></span>用户 Fork。关系字段不可用时自动回退到列表，不根据对话正文猜测父子关系。</div></div>
             </div>
           </div>
         </div>
@@ -2147,7 +2157,7 @@
               <div class="breadcrumb"><span class="crumb cur">Codex Maps</span></div>
               <div class="hd-row">
                 <div><h2>Session 地图</h2><div class="hd-sub">按项目与状态组织 · 实时更新</div></div>
-                <div class="hd-actions"><span class="btn ghost sm"><i data-lucide="list"></i>列表</span><span class="btn primary sm"><i data-lucide="layout-grid"></i>地图</span></div>
+                <div class="hd-actions"><span class="btn ghost sm"><i data-lucide="list"></i>列表</span><span class="btn ghost sm"><i data-lucide="layout-grid"></i>卡片</span><span class="btn primary sm"><i data-lucide="git-fork"></i>泳道</span></div>
               </div>
             </div>
             <div class="main-bd">
@@ -2160,34 +2170,41 @@
               <div class="filterbar">
                 <span class="pc-search"><i data-lucide="search"></i><span class="sph">输入标题关键词</span></span>
                 <span class="chip active">全部</span><span class="chip">运行中</span><span class="chip">等待</span><span class="chip">完成</span>
-                <span class="fb-pill"><i data-lucide="clock"></i>最近更新</span>
-              </div>
-              <div class="card-grid col3">
-                <div class="card">
-                  <div class="card-hd"><span class="ct">Codex-Maps</span><span class="cmore">6 个<i data-lucide="chevron-right"></i></span></div>
-                  <div class="card-bd"><div style="display:flex;justify-content:space-between;gap:12px;"><strong>设计 Session 地图</strong><span class="cell-tag"><span class="dot"></span>运行中</span></div><div class="hd-sub" style="margin-top:8px;">正在生成 MVP 架构与原型</div><div style="display:flex;justify-content:space-between;margin-top:18px;"><span class="hd-sub">2 子 Agent</span><span class="hd-sub">12 秒前</span></div></div>
-                </div>
-                <div class="card">
-                  <div class="card-hd"><span class="ct">Website</span><span class="cmore">4 个<i data-lucide="chevron-right"></i></span></div>
-                  <div class="card-bd"><div style="display:flex;justify-content:space-between;gap:12px;"><strong>优化站点导航</strong><span class="cell-tag muted"><span class="dot"></span>等待</span></div><div class="hd-sub" style="margin-top:8px;">等待 CI 检查</div><div style="display:flex;justify-content:space-between;margin-top:18px;"><span class="hd-sub">无子任务</span><span class="hd-sub">18 分钟前</span></div></div>
-                </div>
-                <div class="card">
-                  <div class="card-hd"><span class="ct">Research Notes</span><span class="cmore">3 个<i data-lucide="chevron-right"></i></span></div>
-                  <div class="card-bd"><div style="display:flex;justify-content:space-between;gap:12px;"><strong>整理研究资料</strong><span class="cell-tag muted"><span class="dot"></span>已完成</span></div><div class="hd-sub" style="margin-top:8px;">全部检查通过，索引已生成</div><div style="display:flex;justify-content:space-between;margin-top:18px;"><span class="hd-sub">3 子任务</span><span class="hd-sub">今天 08:20</span></div></div>
-                </div>
+                <span class="fb-pill"><i data-lucide="clock"></i>最近更新</span><span class="fb-pill"><i data-lucide="git-fork"></i>显示关系</span>
               </div>
               <div class="panel">
-                <div class="panel-hd"><span class="pt">需要关注</span><span class="pcount">按优先级排序</span><span class="pt-right"><span class="btn ghost sm">查看全部</span></span></div>
-                <div class="panel-bd flush">
-                  <div class="table">
-                    <div class="thead tr"><span class="th" style="flex:1">SESSION</span><span class="th" style="width:180px">项目</span><span class="th" style="width:140px">状态</span><span class="th" style="width:140px">更新时间</span></div>
-                    <div class="tbody">
-                      <div class="tr"><span class="td strong" style="flex:1">部署预览环境</span><span class="td" style="width:180px">Website</span><span class="td" style="width:140px"><span class="cell-tag"><span class="dot"></span>需要确认</span></span><span class="td sub" style="width:140px">2 分钟前</span></div>
-                      <div class="tr"><span class="td strong" style="flex:1">完成测试报告</span><span class="td" style="width:180px">Agent Lab</span><span class="td" style="width:140px"><span class="cell-tag muted"><span class="dot"></span>已暂停</span></span><span class="td sub" style="width:140px">1 小时前</span></div>
+                <div class="panel-hd"><span class="pt">项目泳道地图</span><span class="pcount">项目是泳道 · Session 是节点 · 派生关系留在同一条工作线</span><span class="pt-right"><span class="btn ghost sm">折叠空闲节点</span></span></div>
+                <div class="panel-bd" style="padding:10px 16px 14px;">
+                  <div style="display:grid;grid-template-columns:190px 28px 1fr;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);">
+                    <div class="card" style="margin:0;box-shadow:0 0 0 2px var(--ink) inset;"><div class="card-hd"><span class="ct">Codex-Maps</span><span class="cmore">6<i data-lucide="chevron-right"></i></span></div><div class="card-bd"><strong>3 活跃 · 1 需关注</strong><div class="hd-sub" style="margin-top:5px;">主目录 · 2 条派生线</div></div></div>
+                    <div style="border-top:1px solid var(--line);height:1px;"></div>
+                    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;background:linear-gradient(var(--hairline),var(--hairline)) left 50%/100% 1px no-repeat;">
+                      <div class="card" style="margin:0;box-shadow:0 0 0 2px var(--ink) inset;"><div class="card-hd"><span class="ct">设计 Session 地图</span><span class="cell-tag"><span class="dot"></span>执行中</span></div><div class="card-bd"><div class="hd-sub">MVP 架构与原型</div><div style="display:flex;justify-content:space-between;margin-top:8px;"><span class="pcount">目标进行中 · 2 Agent</span><span class="pcount">12 秒</span></div></div></div>
+                      <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">跨平台门禁</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">等待 macOS 验证</div><div class="pcount" style="margin-top:8px;">目标暂停 · 父：设计 Session 地图</div></div></div>
+                      <div class="card" style="margin:0;border-style:dashed;"><div class="card-hd"><span class="ct">MVP 备选</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">从 Turn 8 Fork</div><div class="pcount" style="margin-top:8px;">目标未声明 · 用户分支</div></div></div>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:190px 28px 1fr;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);">
+                    <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">Website</span><span class="cmore">4<i data-lucide="chevron-right"></i></span></div><div class="card-bd"><strong>1 活跃 · 1 需确认</strong><div class="hd-sub" style="margin-top:5px;">2 个根目录</div></div></div>
+                    <div style="border-top:1px solid var(--line);height:1px;"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:linear-gradient(var(--hairline),var(--hairline)) left 50%/100% 1px no-repeat;">
+                      <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">优化站点导航</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">等待 CI 检查</div><div class="pcount" style="margin-top:8px;">目标进行中 · 18 分钟</div></div></div>
+                      <div class="card" style="margin:0;box-shadow:0 0 0 2px var(--ink) inset;"><div class="card-hd"><span class="ct">部署预览环境</span><span class="cell-tag"><span class="dot"></span>等待输入</span></div><div class="card-bd"><div class="hd-sub">请选择部署目标</div><div class="pcount" style="margin-top:8px;">目标阻塞 · 2 分钟</div></div></div>
+                      <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">修复主题切换</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">验证已通过</div><div class="pcount" style="margin-top:8px;">目标完成 · 今天 09:14</div></div></div>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:190px 28px 1fr;align-items:center;padding:9px 0 2px;">
+                    <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">Research Notes</span><span class="cmore">3<i data-lucide="chevron-right"></i></span></div><div class="card-bd"><strong>全部空闲</strong><div class="hd-sub" style="margin-top:5px;">最近更新 今天 08:20</div></div></div>
+                    <div style="border-top:1px solid var(--line);height:1px;"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:linear-gradient(var(--hairline),var(--hairline)) left 50%/100% 1px no-repeat;">
+                      <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">整理研究资料</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">索引已生成</div><div class="pcount" style="margin-top:8px;">目标完成 · 3 子任务</div></div></div>
+                      <div class="card" style="margin:0;"><div class="card-hd"><span class="ct">论文摘要</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">等待继续</div><div class="pcount" style="margin-top:8px;">目标暂停 · 昨天</div></div></div>
+                      <div class="card" style="margin:0;border-style:dashed;"><div class="card-hd"><span class="ct">主题分支</span><span class="cell-tag muted"><span class="dot"></span>空闲</span></div><div class="card-bd"><div class="hd-sub">用户 Fork</div><div class="pcount" style="margin-top:8px;">目标已归档 · 7 天前</div></div></div>
                     </div>
                   </div>
                 </div>
               </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;"><span>实线工作线＝同项目 Session；虚线节点＝Fork；粗描边＝正在运行或需要处理</span><span>显示 3 / 12 项目 · 9 / 146 Session</span></div>
             </div>
           </div>
         </div>
@@ -2302,6 +2319,78 @@
       </div>
     </div>
 
+    <div class="stage" data-cell="2,5">
+      <div class="stage-label">⑧ 阻塞原因鱼骨图（MVP+1 按需诊断）</div>
+      <div class="screen" id="session-diagnosis">
+        <div class="topbar">
+          <div class="brand"><span class="logo"><i data-lucide="git-fork"></i></span>Codex Maps</div>
+          <div class="topnav"><span class="tn-item">Session 详情</span><span class="tn-item">关系树</span><span class="tn-item active">鱼骨诊断</span></div>
+          <div class="top-right"><span class="fb-pill"><i data-lucide="clock"></i>最后事件 2 分钟前</span><span class="avatar-sm">S</span></div>
+        </div>
+        <div class="shell">
+          <div class="sidebar">
+            <div class="side-item"><i data-lucide="chevron-left"></i>返回详情</div>
+            <div class="side-cap">诊断对象</div>
+            <div class="side-item active"><i data-lucide="circle-alert"></i>部署预览环境</div>
+            <div class="side-item"><i data-lucide="clock"></i>历史阻塞<span class="side-tail">2</span></div>
+            <div class="side-cap">证据类型</div>
+            <div class="side-item"><i data-lucide="hand"></i>等待输入<span class="side-tail">1</span></div>
+            <div class="side-item"><i data-lucide="shield"></i>审批请求<span class="side-tail">0</span></div>
+            <div class="side-item"><i data-lucide="settings"></i>工具错误<span class="side-tail">0</span></div>
+            <div class="side-item"><i data-lucide="unlink"></i>外部依赖<span class="side-tail">0</span></div>
+          </div>
+          <div class="main">
+            <div class="main-hd">
+              <div class="breadcrumb"><span class="crumb">Website</span><i data-lucide="chevron-right"></i><span class="crumb">部署预览环境</span><i data-lucide="chevron-right"></i><span class="crumb cur">阻塞诊断</span></div>
+              <div class="hd-row"><div><h2>为什么这个 Session 卡住了？</h2><div class="hd-sub">鱼骨图只归纳明确事件，不从聊天正文猜测原因</div></div><div class="hd-actions"><span class="btn outline sm"><i data-lucide="list"></i>证据列表</span><span class="btn primary sm"><i data-lucide="external-link"></i>打开并处理</span></div></div>
+            </div>
+            <div class="main-bd">
+              <div class="filterbar"><span class="chip active">当前阻塞</span><span class="chip">本次 Turn</span><span class="chip">全部历史</span><span class="fb-pill"><i data-lucide="shield"></i>来源：App Server 事件</span></div>
+              <div class="panel">
+                <div class="panel-hd"><span class="pt">原因 → 当前结果</span><span class="pcount">1 条已确认原因 · 3 类无证据</span><span class="pt-right"><span class="cell-tag"><span class="dot"></span>等待用户</span></span></div>
+                <div class="panel-bd" style="position:relative;height:500px;padding:0;">
+                  <div style="position:absolute;left:245px;right:275px;top:248px;border-top:2px solid var(--ink);"></div>
+                  <div class="card" style="position:absolute;left:24px;top:194px;width:220px;margin:0;">
+                    <div class="card-hd"><span class="ct">Session</span><span class="cell-tag muted"><span class="dot"></span>执行暂停</span></div>
+                    <div class="card-bd"><strong>部署预览环境</strong><div class="hd-sub" style="margin-top:6px;">目标阻塞 · Website · Turn 12</div></div>
+                  </div>
+                  <div class="card" style="position:absolute;right:24px;top:176px;width:250px;margin:0;box-shadow:0 0 0 2px var(--ink) inset;">
+                    <div class="card-hd"><span class="ct">当前结果</span><span class="cell-tag"><span class="dot"></span>需要处理</span></div>
+                    <div class="card-bd"><strong>等待选择部署目标</strong><div class="hd-sub" style="margin-top:6px;">处理后可继续当前 Turn</div><div style="margin-top:10px;"><span class="btn primary sm">立即回答</span></div></div>
+                  </div>
+
+                  <div class="card" style="position:absolute;left:300px;top:28px;width:240px;margin:0;box-shadow:0 0 0 2px var(--ink) inset;">
+                    <div class="card-hd"><span class="ct">输入 / 审批</span><span class="cell-tag"><span class="dot"></span>1</span></div>
+                    <div class="card-bd"><strong>用户输入待处理</strong><div class="hd-sub" style="margin-top:6px;">事件：请选择 staging 或 production</div></div>
+                  </div>
+                  <div style="position:absolute;left:423px;top:153px;width:126px;border-top:1px solid var(--ink);transform:rotate(52deg);transform-origin:left center;"></div>
+
+                  <div class="card" style="position:absolute;left:625px;top:28px;width:240px;margin:0;">
+                    <div class="card-hd"><span class="ct">工具 / 环境</span><span class="cell-tag muted"><span class="dot"></span>0</span></div>
+                    <div class="card-bd"><strong>未发现工具错误</strong><div class="hd-sub" style="margin-top:6px;">最近工具调用均已完成</div></div>
+                  </div>
+                  <div style="position:absolute;left:748px;top:153px;width:126px;border-top:1px solid var(--line);transform:rotate(52deg);transform-origin:left center;"></div>
+
+                  <div class="card" style="position:absolute;left:300px;bottom:28px;width:240px;margin:0;">
+                    <div class="card-hd"><span class="ct">外部依赖</span><span class="cell-tag muted"><span class="dot"></span>0</span></div>
+                    <div class="card-bd"><strong>无明确依赖阻塞</strong><div class="hd-sub" style="margin-top:6px;">网络与 CI 未报告失败</div></div>
+                  </div>
+                  <div style="position:absolute;left:423px;top:347px;width:126px;border-top:1px solid var(--line);transform:rotate(-52deg);transform-origin:left center;"></div>
+
+                  <div class="card" style="position:absolute;left:625px;bottom:28px;width:240px;margin:0;">
+                    <div class="card-hd"><span class="ct">计划 / 范围</span><span class="cell-tag muted"><span class="dot"></span>未知</span></div>
+                    <div class="card-bd"><strong>没有结构化原因</strong><div class="hd-sub" style="margin-top:6px;">不依据消息文本自动归因</div></div>
+                  </div>
+                  <div style="position:absolute;left:748px;top:347px;width:126px;border-top:1px dashed var(--line);transform:rotate(-52deg);transform-origin:left center;"></div>
+                </div>
+              </div>
+              <div class="panel"><div class="panel-hd"><span class="pt">诊断原则</span></div><div class="panel-bd">鱼骨图不是 Session 导航页。只有明确的等待输入、审批、工具错误或外部依赖事件才进入原因骨；没有证据的类别显示“无证据/未知”。</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="link" data-from="codex-session" data-to="embedded-map" data-tag="点击左侧 Codex Maps" data-side="auto"></div>
     <div class="link" data-from="embedded-map" data-to="session-detail" data-tag="点击 Session 卡片" data-side="auto"></div>
     <div class="link" data-from="session-detail" data-to="relation-map" data-tag="查看关系与分支" data-side="auto"></div>
@@ -2312,6 +2401,8 @@
     <div class="link" data-from="session-detail" data-to="codex-session" data-tag="在 Codex 中打开" data-side="auto" data-dash="1"></div>
     <div class="link" data-from="project-manager" data-to="embedded-map" data-tag="保存并返回" data-side="auto" data-dash="1"></div>
     <div class="link" data-from="relation-map" data-to="session-detail" data-tag="打开节点详情" data-side="auto" data-dash="1"></div>
+    <div class="link" data-from="relation-map" data-to="session-diagnosis" data-tag="切换鱼骨诊断" data-side="auto"></div>
+    <div class="link" data-from="session-diagnosis" data-to="session-detail" data-tag="返回 Session 详情" data-side="auto" data-dash="1"></div>
 
   </div>
 

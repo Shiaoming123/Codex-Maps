@@ -1,0 +1,130 @@
+export interface ClientInfo {
+  name: string;
+  title: string | null;
+  version: string;
+}
+
+export interface ProtocolThread {
+  id: string;
+  sessionId: string;
+  forkedFromId: string | null;
+  preview: string;
+  createdAt: number;
+  updatedAt: number;
+  status:
+    | { type: "notLoaded" }
+    | { type: "idle" }
+    | { type: "systemError" }
+    | {
+        type: "active";
+        activeFlags: Array<"waitingOnApproval" | "waitingOnUserInput">;
+      };
+  cwd: string;
+  agentNickname: string | null;
+  agentRole: string | null;
+  name: string | null;
+  [key: string]: unknown;
+}
+
+export type ExecutionState = "running" | "waiting" | "idle" | "failed" | "unknown";
+
+export interface SessionSummary {
+  id: string;
+  sessionId: string;
+  title: string;
+  preview: string;
+  cwd: string;
+  createdAt: number;
+  updatedAt: number;
+  executionState: ExecutionState;
+  goalState: "unknown";
+  forkedFromId: string | null;
+  agentNickname: string | null;
+  agentRole: string | null;
+}
+
+export interface SourceVersion {
+  sourceId: string;
+  epoch: number;
+  revision: number;
+}
+
+export interface SessionMapSnapshot {
+  schemaVersion: 1;
+  version: SourceVersion;
+  sync: { phase: "ready"; stale: false };
+  sessions: readonly SessionSummary[];
+}
+
+export interface SnapshotSource<T> {
+  getSnapshot(): T;
+  subscribe(listener: () => void): () => void;
+}
+
+export type SessionQuery = { kind: "overview" };
+
+export interface SessionMapModule {
+  observe(query: SessionQuery): SnapshotSource<SessionMapSnapshot>;
+  dispose(): Promise<void>;
+}
+
+export interface JsonlConnection {
+  readonly lines: AsyncIterable<string>;
+  send(line: string): Promise<void>;
+  release(): Promise<void>;
+}
+
+export interface AppServerAdapter {
+  acquire(): Promise<JsonlConnection>;
+}
+
+export interface SessionMapModuleOptions {
+  adapter: AppServerAdapter;
+  sourceId: string;
+  clientInfo: ClientInfo;
+}
+
+export type HostCapability = "session.read" | "thread.navigate";
+
+export interface HostProbe {
+  hostId: string;
+  fingerprint: string;
+  capabilities: readonly HostCapability[];
+}
+
+export interface HostBridgeConnection {
+  source: SnapshotSource<SessionMapSnapshot>;
+  openThread(threadId: string): Promise<HostNavigationReceipt>;
+  release(): Promise<void>;
+}
+
+export interface HostNavigationReceipt {
+  requestedThreadId: string;
+  openedThreadId: string;
+}
+
+export interface HostBridgeAdapter {
+  probe(): Promise<HostProbe>;
+  attach(): Promise<HostBridgeConnection>;
+}
+
+export interface HostBridgeClient {
+  id: string;
+  surface: "embedded" | "secondary-window";
+}
+
+export interface HostBridgeLease {
+  readonly source: SnapshotSource<SessionMapSnapshot>;
+  openThread(threadId: string): Promise<void>;
+  dispose(): void;
+}
+
+export interface HostBridgeModule {
+  connect(client: HostBridgeClient): HostBridgeLease;
+  dispose(): Promise<void>;
+}
+
+export interface HostBridgeModuleOptions {
+  adapter: HostBridgeAdapter;
+  supportedFingerprints: readonly string[];
+}

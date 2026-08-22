@@ -2,7 +2,7 @@
 
 ## 1. 架构结论
 
-Codex Maps 应实现为“共享核心 + 两个宿主”，而不是两个独立应用：
+Codex Maps 的目标架构仍是“共享核心 + 两个宿主”，而不是两个独立应用：
 
 ```text
                          ┌─ Codex 内嵌页（同壳路由）
@@ -17,6 +17,8 @@ Host Bridge ──► Session Store ──► Shared React UI
 ```
 
 Host Bridge 是唯一的 App Server 连接与写操作出口；两个 renderer 只通过受控 IPC 读取同一个 Store 和发起命令。禁止内嵌页与独立页各自启动 app-server。
+
+当前发布边界：共享核心和独立模式可以实施；Codex Desktop 原生 route/window 没有公开挂载合同，因此图中的内嵌分支处于 fail-closed。独立模式只对自己拥有的 App Server 声称实时与可写；不能借用 Desktop owner 时，不启动第二进程冒充同源。
 
 ## 2. 产品不是单一 manifest
 
@@ -114,7 +116,7 @@ tests/fixtures/                # 去敏协议 fixtures
 
 | 目标 | MVP 策略 | 主要差异 | 退出门禁 |
 |---|---|---|---|
-| Windows 11 x64 | 首发完整支持 | MSIX/WindowsApps 只读、PowerShell、盘符/反斜杠、窗口生命周期 | 内嵌+副屏+5 类 mutation 全链路 |
+| Windows 11 x64 | 首发独立模式；原生宿主另设门禁 | MSIX/WindowsApps 只读、PowerShell、盘符/反斜杠、窗口生命周期 | 独立模式全链路；Native Gate 单独验收 |
 | Windows + WSL2 | 独立环境验证 | `C:\`、`/mnt/c`、`\\wsl.localhost` 映射，runner 与 cwd 归属 | 项目筛选和打开 Session 不串路径 |
 | macOS Apple Silicon | 第二验证平台 | `.app` bundle、codesign/notarization、Command 快捷键、arm64 | 共享核心测试全过，host adapter smoke 过 |
 | Linux x64/ARM64 preview | 第三适配 | deb/rpm、Wayland/XWayland、窗口定位和通知限制 | 不依赖固定窗口坐标；受限能力明确降级 |

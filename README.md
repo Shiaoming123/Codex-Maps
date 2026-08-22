@@ -4,7 +4,7 @@
 
 Codex Maps 计划提供同一套 Session 地图的两种形态：Codex 左侧入口打开的内嵌页，以及适合放在副屏持续观察的独立窗口。两者必须共享同一个实时 Session Store，避免状态延迟、冲突或重复写入。
 
-当前状态：`0.1.0 foundation / planning`。仓库已经完成命名、产品边界、官方能力核对、MVP 架构与 PC 页面流；现有 Python CLI 仅用于验证 `codex app-server` 协议。**当前版本还不是可安装的 Codex 内嵌插件，也没有完成实时 UI。**
+当前状态：`0.1.0 foundation / core GO / native host blocked`。仓库已经完成命名、产品边界、MVP 架构与 PC 页面流，并落地 App Server 只读切片和 Host Bridge 合同切片。**产品核心可以继续实现；当前 Codex Desktop 没有公开 native route/window 挂载合同，所以本版本不是原生左侧插件，也不会修改签名安装包来伪装实现。**
 
 ## MVP 要解决什么
 
@@ -19,14 +19,16 @@ Codex Maps 计划提供同一套 Session 地图的两种形态：Codex 左侧入
 
 ## 核心技术判断
 
-`codex app-server` 是 Session 的权威来源。它提供列表、读取、重命名、置顶、归档、删除、运行状态、Turn 计划、Token 使用和派生关系等能力。Codex Maps 不直接修改 Codex 的 JSONL 或 SQLite 私有存储。
+`codex app-server` 是 Session 的权威来源。Codex Maps 不直接修改 Codex 的 JSONL 或 SQLite 私有存储。功能开关必须以 **Codex Desktop 实际运行的二进制** 生成合同为准，不能误用 PATH 中另一个 CLI。当前桌面宿主运行 `codex-cli 0.149.0-alpha.4.1`：稳定合同包含删除和 Section，experimental 合同另包含项目与 parent/ancestor 关系筛选；置顶仍是 Desktop 宿主的本地侧栏状态，没有 App Server `isPinned` 字段，因此必须通过 Host Bridge 单独验证。
 
 [官方插件架构](https://developers.openai.com/plugins/concepts/plugins)允许插件组合 skills、MCP server 和可选 UI resource，但这并不等于存在“注册持久化原生左侧页面”的公开接口。因此本项目实际由两部分组成：
 
 1. 可安装的 Codex 插件包，用于名称、技能和后续命令入口。
-2. 本地桌面宿主适配层，用于内嵌路由、左侧入口、独立窗口和共享事件桥。
+2. 本地桌面宿主适配层，用于能力门禁、独立窗口，以及未来受支持的内嵌路由和共享事件桥。
 
 壳层适配必须绑定具体 Codex build，失配时停止加载；不得直接改写系统安装目录。
+
+当前落地判断：Session Map 核心、独立只读地图，以及由 Codex Maps 自己拥有 App Server 时的实时管理模式可实现；原生左侧入口、借用 Desktop 当前 request client 的副屏和可核验的原生跳转暂不可公开交付。详见 [Host Bridge 发布边界 ADR](./docs/adr/0002-host-bridge-and-release-boundary.md)。
 
 ## 平台策略
 
@@ -44,11 +46,41 @@ Codex-Maps/
 ├─ .codex-plugin/plugin.json      # Codex 插件清单
 ├─ docs/                          # 产品、架构、能力矩阵和开发规划
 │  └─ prototypes/                 # 可交互 PC 页面流原型
+├─ packages/session-map/          # 首个 TS 深模块与 App Server 适配器
 ├─ scripts/codex_maps.py          # 只读 App Server 诊断客户端
 ├─ skills/                        # 后续插件技能入口
 ├─ data/                          # 仅本地偏好，不提交 Session 数据
-└─ tests/                         # 当前协议测试
+└─ tests/                         # Python 协议基线测试
 ```
+
+## TypeScript 纵向切片
+
+```powershell
+pnpm install
+pnpm verify
+
+# 可选：连接本机 App Server，只执行随机无命中搜索，不输出 Session 内容
+$env:CODEX_MAPS_CODEX_PATH="$env:LOCALAPPDATA\OpenAI\Codex\bin\codex.exe"
+pnpm test:smoke:app-server
+```
+
+默认测试会跳过真实环境 smoke；只有显式设置 `CODEX_MAPS_CODEX_PATH` 才会启动独立、只读的诊断 App Server。该进程仅用于开发验证，不能作为内嵌页或副屏窗口的数据源；正式宿主仍必须复用 Codex Desktop 的唯一 Host Bridge。
+
+Windows Host Bridge 开发前先运行 active-process 探针，避免误用 PATH 中的另一个 CLI：
+
+```powershell
+.\scripts\probe-active-codex.ps1
+```
+
+报告写入被 `.gitignore` 排除的 `.local/host-probe.json`，只包含进程/版本/哈希和合同能力，不读取 Session 数据。
+
+如需复核当前 Desktop preload 的 Bridge envelope，可运行：
+
+```powershell
+.\scripts\probe-desktop-bridge.ps1
+```
+
+该脚本只读取安装包中的 JavaScript bundle，在系统临时目录提取有限文件并自动清理；不读取 Session，也不修改 Codex 安装目录。
 
 ## 当前诊断客户端
 
@@ -77,6 +109,10 @@ python .\scripts\codex_maps.py list --codex-path "$env:LOCALAPPDATA\OpenAI\Codex
 - [问题与验收清单](./docs/issues.md)
 - [路线图](./docs/roadmap.md)
 - [决策记录](./docs/decision-log.md)
+- [开发与验证日志](./docs/development-log.md)
+- [Windows Host Bridge Spike](./docs/host-bridge-spike.md)
+- [Session Map 模块 ADR](./docs/adr/0001-session-map-module.md)
+- [Host Bridge 与发布边界 ADR](./docs/adr/0002-host-bridge-and-release-boundary.md)
 - [PC 页面流原型](./docs/prototypes/codex-maps-flow.html)
 
 官方技术依据：[Codex App Server](https://developers.openai.com/codex/app-server)、[App Server 开源协议说明](https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md)、[Codex harness 介绍](https://openai.com/index/unlocking-the-codex-harness/)。
