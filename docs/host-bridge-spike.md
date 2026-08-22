@@ -63,3 +63,11 @@ renderer bundle 内部已有统一 request client，并通过它调用 `thread/l
 - 当前插件系统没有公开 native route/window mount；不修改签名安装包的第三方接入路径没有找到。
 
 因此 CM-001 的**内存架构部分通过**，Desktop production adapter 部分在当前 build 上停止。若未来出现公开接口或受支持 loader，从本文件的 fingerprint、owner、双 lease 和 exact-navigation 门禁继续，不重做已验证的核心模块。
+
+## 2026-08-22 复验：多 App Server 环境与当前安装包
+
+- 同时存在三个 `codex app-server` 进程时，探针已改为只选择直接由 `ChatGPT.exe`（`OpenAI.Codex_*` 包路径）拥有的唯一 Desktop owner；独立 Reader 与开发工具子进程不会再让 Desktop probe 误报失败。
+- 当前 owner 为 `codex-cli 0.149.0-alpha.4.1`，稳定合同仍包含 `thread/list`、`thread/read`、`thread/delete` 与 `threadSection/*`，experimental 合同仍包含 project 与 parent/ancestor 筛选。协议能力没有改变“谁拥有正在运行的连接”这一事实。
+- 只读 ASAR 探针再次确认 `connect-app-host` 由 Desktop 的 preload 使用 `ipcRenderer.postMessage("codex_desktop:connect-app-host", ...)` 转发；renderer 内部创建的 `MessageChannel` 依赖该 preload。没有发现可供第三方进程使用的 socket、端口、外部 host identifier 或 route/window 注册合同。
+
+结论不变：当前 build 的 Host Bridge 只能作为 Codex 自身私有实现证据，不能成为 Codex Maps 的 production adapter。继续通过注入、ASAR 修改、DOM 获取或第二 App Server 伪造共享源均违反本项目的退出判定。

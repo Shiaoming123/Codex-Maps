@@ -12,6 +12,8 @@
 
 失败条件：只能通过两个 app-server 或轮询私有存储获得状态。此时内嵌发布必须停止并重新评估宿主方案。
 
+2026-08-22 复验证据：目标 Desktop build 的 App Server 由私有 preload/IPC 连接拥有；多进程安全 probe 与静态 ASAR probe 都没有发现第三方可用的 attach、事件 socket、route/window 注册或精确导航回执。CM-001 因公开 Host API 缺失继续阻塞，不能以独立 Reader 的 SSE 代替。
+
 当前证据：进程树确认 Desktop 主进程只拥有一个 App Server；preload 暴露受控 renderer message bridge，renderer 内部已有统一 request client 和 thread 通知处理。内存合同已经通过单 attach、双 lease、同一 snapshot、独立释放和未知 fingerprint 拒绝。阻塞点是当前插件 manifest 没有 native route/window 注册合同，第三方窗口也不能获得 Codex preload；因此 production attach 停止，不修改 ASAR，不启动第二 App Server。详见 `docs/host-bridge-spike.md` 与 ADR 0002。
 
 ### CM-002 生产级 App Server 客户端

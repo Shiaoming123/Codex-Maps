@@ -239,3 +239,15 @@ pnpm start:desktop (token hardening rerun)
 
 - 以真实本地 Reader 快照检查大量工作区/Session 时的横向滚动、筛选、列表降级和详情抽屉。
 - 得到项目/Section 的受支持数据源后，将“工作区泳道”升级为项目泳道；此前保持兼容模式标签。
+
+## 2026-08-22 — Host Bridge 可行性复验
+
+### 验证结果
+
+- 活动 Desktop probe 在三个 App Server 并存时，已可靠选择由 `ChatGPT.exe` 直接拥有的 Desktop owner；生成的稳定/experimental 合同与既有记录一致。
+- 只读 ASAR 探针确认实时 request client 与 `connect-app-host` 都依赖 Codex 自己的 Electron preload 和私有 IPC；没有获得外部 socket、attach/discovery 入口、route/window 注册合同或可验证的精确导航回执。
+- 因此，Codex Maps 已能实时渲染**自己拥有的** App Server 快照，但当前不能实时、可靠地监控用户正在使用的 Codex Desktop 中的任务。该限制来自公开宿主接入接口缺失，不是地图 UI 或事件 reducer 的实现缺口。
+
+### 记录的决策
+
+按 Host Bridge Spike 的退出条件停止 private bridge 路径；不采用 ASAR 修改、DOM 注入、preload 冒用、进程内存读取或第二 App Server 伪造同步。恢复当前 Desktop 监控开发的前提是官方提供 attach/discovery/event bridge，或用户明确选择将 Codex Maps 改为自己创建和管理任务的独立工作台。

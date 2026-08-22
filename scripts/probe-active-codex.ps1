@@ -41,11 +41,23 @@ $servers = @(
         }
 )
 
-if ($servers.Count -ne 1) {
-    throw "Expected exactly one active Codex Desktop App Server, found $($servers.Count)."
+$desktopServers = @(
+    foreach ($candidate in $servers) {
+        $parent = Get-CimInstance Win32_Process -Filter "ProcessId = $($candidate.ParentProcessId)"
+        if (
+            $parent.Name -ieq "ChatGPT.exe" -and
+            $parent.ExecutablePath -match "\\OpenAI\.Codex_[^\\]+\\app\\ChatGPT\.exe$"
+        ) {
+            $candidate
+        }
+    }
+)
+
+if ($desktopServers.Count -ne 1) {
+    throw "Expected exactly one Codex Desktop-owned App Server, found $($desktopServers.Count) among $($servers.Count) App Server processes."
 }
 
-$server = $servers[0]
+$server = $desktopServers[0]
 $executablePath = [System.IO.Path]::GetFullPath([string]$server.ExecutablePath)
 if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf)) {
     throw "Active App Server executable does not exist: $executablePath"
