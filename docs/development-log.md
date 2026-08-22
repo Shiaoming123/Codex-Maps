@@ -293,6 +293,7 @@ pnpm start:desktop (token hardening rerun)
 
 - 新增 `pnpm smoke:standalone`：构建 Reader，使用临时合成 Session 目录启动 localhost 服务，验证 ready 快照、只读来源、关系降级 envelope，并等待进程关闭。
 - 新增 `shortcut:windows:remove` 和卸载脚本；在临时快捷方式路径验证创建、重复创建拒绝、`-Force` 迁移和移除。
+- Electron 生命周期合约补充 macOS 分支：最后窗口关闭不退出应用，`before-quit` 才释放 Reader；Windows 退出顺序测试仍保持通过。
 
 ### 当前发布状态
 

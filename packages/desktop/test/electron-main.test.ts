@@ -90,4 +90,24 @@ describe("Electron desktop lifecycle", () => {
     releaseReader?.();
     await vi.waitFor(() => expect(application.quitCalls).toBe(1));
   });
+
+  it("keeps macOS alive after the last window closes and releases on quit", async () => {
+    const application = new MemoryElectronApplication(true);
+    const close = vi.fn(async () => {});
+
+    await startElectronDesktopApp({
+      application,
+      platform: "darwin",
+      createShell: async () => ({ openMainWindow: async () => {}, close }),
+    });
+
+    application.emit("window-all-closed");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(close).not.toHaveBeenCalled();
+    expect(application.quitCalls).toBe(0);
+
+    application.emit("before-quit");
+    await vi.waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+    expect(application.quitCalls).toBe(0);
+  });
 });
