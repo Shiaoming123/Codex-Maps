@@ -270,7 +270,7 @@ pnpm start:desktop (token hardening rerun)
 ### 待办与风险
 
 - 首次索引会读取历史 JSONL；后续每秒只检查文件元数据并重读变化文件。本机 1,454 个 session 的两个刷新窗口 CPU 约 16ms；目录 watcher/真正的尾随解析留待跨平台性能证据出现后再决定。
-- Token 事件尚未投影数值；完成百分比、标题、Fork、项目/Section、子 Agent 和写操作仍没有足够的稳定来源。
+- Token 事件已投影为输入/输出/推理输出/总计/缓存字段与上下文窗口；完成百分比、标题、Fork、项目/Section、子 Agent 和写操作仍没有足够的稳定来源。
 - macOS/Linux 需要实机验证 session 路径和追加行为；当前只宣称 Windows 本机 smoke。
 
 ## 2026-08-22 — Windows 快速启动入口

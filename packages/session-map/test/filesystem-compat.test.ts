@@ -26,6 +26,31 @@ describe("projectFilesystemCompatJsonl", () => {
     expect(projection.executionState).toBe("completed");
   });
 
+  it("projects only token usage and context-window fields from a token event", () => {
+    const projection = projectFilesystemCompatJsonl([
+      '{"type":"event_msg","timestamp":"2026-08-22T10:01:00.000Z","payload":{"type":"token_count","info":{"model_context_window":128000,"last_token_usage":{"input_tokens":100,"output_tokens":20,"reasoning_output_tokens":5,"total_tokens":120,"cached_input_tokens":40,"cache_write_input_tokens":3},"total_token_usage":{"input_tokens":1000,"output_tokens":200,"reasoning_output_tokens":50,"total_tokens":1200,"cached_input_tokens":400,"cache_write_input_tokens":30}},"rate_limits":{"plan_type":"private-test-only"}}}',
+    ]);
+
+    expect(projection.contextWindow).toBe(128000);
+    expect(projection.tokenUsage).toEqual({
+      inputTokens: 1000,
+      outputTokens: 200,
+      reasoningOutputTokens: 50,
+      totalTokens: 1200,
+      cachedInputTokens: 400,
+      cacheWriteInputTokens: 30,
+    });
+  });
+
+  it("keeps token usage unknown instead of converting malformed values to zero", () => {
+    const projection = projectFilesystemCompatJsonl([
+      '{"type":"event_msg","timestamp":"2026-08-22T10:01:00.000Z","payload":{"type":"token_count","info":{"model_context_window":"unknown","total_token_usage":{"input_tokens":"not-a-number"}}}}',
+    ]);
+
+    expect(projection.contextWindow).toBeNull();
+    expect(projection.tokenUsage).toBeNull();
+  });
+
   it("projects a synthetic abort as interrupted", () => {
     const projection = projectFilesystemCompatJsonl([
       '{"type":"event_msg","timestamp":"2026-08-22T10:00:00.000Z","payload":{"type":"task_started"}}',

@@ -58,12 +58,12 @@
 - Accept only numeric fields from the verified `token_count` event shape; do not expose nested rate-limit/account data.
 - The drawer shows “未提供” when the source does not contain a value.
 
-- [ ] Inspect only synthetic/metadata field names needed for `token_count`; do not print real event values.
-- [ ] Write failing tests for numeric token extraction, missing values, malformed objects, and the rule that unknown is not zero.
-- [ ] Implement the narrow projection and preserve the latest valid event by timestamp.
-- [ ] Add a compact detail row and one overview metric without adding token data to search or logs.
-- [ ] Run focused tests, `pnpm verify`, and a real smoke that reports only whether token fields are present and their type, not their values.
-- [ ] Record unsupported token fields and commit `feat: expose verified token metrics`.
+- [x] Inspect only synthetic/metadata field names needed for `token_count`; do not print real event values.
+- [x] Write failing tests for numeric token extraction, missing values, malformed objects, and the rule that unknown is not zero.
+- [x] Implement the narrow projection and preserve the latest valid event by timestamp.
+- [x] Add a compact detail row and one overview metric without adding token data to search or logs.
+- [x] Run focused tests, `pnpm verify`, and a real smoke that reports only whether token fields are present and their type, not their values.
+- [x] Record unsupported token fields and commit `feat: expose verified token metrics`.
 
 ### Task 3: Improve session identity and history usability
 

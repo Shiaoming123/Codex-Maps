@@ -13,6 +13,7 @@
 
 - session id、cwd、创建/最近活动时间；
 - `running`、`completed`、`interrupted` 三类确定执行状态；
+- `token_count.info.total_token_usage` 的 token 数值和 `model_context_window`，缺失值保持 unknown；
 - 来源与 stale 状态。
 
 它不提取、保存或投影 message/reasoning/tool 的内容字段，不把 transcript、ID、cwd 或统计上传、记录到公开日志或放入 fixture；不提供 rename/archive/delete/导航；不连接 private IPC；不修改 Codex 安装或用户数据。无法解析或目录不可读时保留最后完整快照并标记 stale。
@@ -29,3 +30,4 @@
 - 合成 fixture 覆盖 start、complete、abort 与截断 JSONL。
 - 临时本地 JSONL 追加覆盖从 `running` 到 `completed` 的 250ms 轮询更新。
 - 真实本机 smoke 只断言来源、同步状态、数量与状态分布；不输出 session 标题、ID、cwd 或正文。
+- Token smoke 只断言字段存在性与数值类型；`rate_limits`、账户和计划字段不进入投影。

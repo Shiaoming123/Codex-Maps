@@ -9,6 +9,7 @@ import type {
   SessionMapSnapshot,
   SessionSummary,
   SnapshotSource,
+  TokenUsage,
 } from "./types.js";
 
 type JsonRecord = Record<string, unknown>;
@@ -63,12 +64,32 @@ function nextExecutionState(eventType: string): ExecutionState | null {
   return null;
 }
 
+function nonNegativeInteger(value: unknown): number | null {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function tokenUsage(value: JsonRecord | null): TokenUsage | null {
+  if (!value) return null;
+  const usage: TokenUsage = {
+    inputTokens: nonNegativeInteger(value.input_tokens),
+    outputTokens: nonNegativeInteger(value.output_tokens),
+    reasoningOutputTokens: nonNegativeInteger(value.reasoning_output_tokens),
+    totalTokens: nonNegativeInteger(value.total_tokens),
+    cachedInputTokens: nonNegativeInteger(value.cached_input_tokens),
+    cacheWriteInputTokens: nonNegativeInteger(value.cache_write_input_tokens),
+  };
+  return Object.values(usage).some((item) => item !== null) ? usage : null;
+}
+
 export function projectFilesystemCompatJsonl(lines: Iterable<string>): FilesystemCompatProjection {
   let sessionId: string | null = null;
   let cwd: string | null = null;
   let createdAt: number | null = null;
   let updatedAt: number | null = null;
   let executionState: ExecutionState = "unknown";
+  let tokenEventAt: number | null = null;
+  let latestTokenUsage: TokenUsage | null = null;
+  let latestContextWindow: number | null = null;
 
   for (const line of lines) {
     let entry: JsonRecord;
@@ -90,7 +111,22 @@ export function projectFilesystemCompatJsonl(lines: Iterable<string>): Filesyste
       continue;
     }
     if (entry.type !== "event_msg") continue;
-    const state = nextExecutionState(stringValue(payload.type) ?? "");
+    const eventType = stringValue(payload.type) ?? "";
+    if (eventType === "token_count") {
+      const info = record(payload.info);
+      const timestampIsNew = timestamp === null
+        ? tokenEventAt === null
+        : tokenEventAt === null || timestamp >= tokenEventAt;
+      if (timestampIsNew) {
+        const totalUsage = tokenUsage(record(info?.total_token_usage));
+        latestTokenUsage = totalUsage ?? tokenUsage(record(info?.last_token_usage));
+        latestContextWindow = nonNegativeInteger(info?.model_context_window);
+        tokenEventAt = timestamp;
+      }
+      if (timestamp !== null && (updatedAt === null || timestamp >= updatedAt)) updatedAt = timestamp;
+      continue;
+    }
+    const state = nextExecutionState(eventType);
     if (!state) continue;
     if (timestamp !== null && (updatedAt === null || timestamp >= updatedAt)) {
       executionState = state;
@@ -99,7 +135,15 @@ export function projectFilesystemCompatJsonl(lines: Iterable<string>): Filesyste
       executionState = state;
     }
   }
-  return { sessionId, cwd, createdAt, updatedAt, executionState };
+  return {
+    sessionId,
+    cwd,
+    createdAt,
+    updatedAt,
+    executionState,
+    tokenUsage: latestTokenUsage,
+    contextWindow: latestContextWindow,
+  };
 }
 
 async function jsonlFiles(directory: string): Promise<string[]> {
@@ -148,6 +192,8 @@ async function loadSessions(
       forkedFromId: null,
       agentNickname: null,
       agentRole: null,
+      tokenUsage: projection.tokenUsage,
+      contextWindow: projection.contextWindow,
     };
     const frozen = Object.freeze(session);
     cache.set(path, { modifiedAtMs: metadata.mtimeMs, size: metadata.size, session: frozen });

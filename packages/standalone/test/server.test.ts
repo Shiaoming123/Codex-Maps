@@ -112,6 +112,20 @@ describe("Standalone Map Reader HTTP boundary", () => {
     }
   });
 
+  it("serves token and context metrics in the session detail client", async () => {
+    const reader = await createTestReader(sourceFor(snapshot()));
+
+    try {
+      const script = await fetch(`${reader.url}/assets/app.js`).then((response) => response.text());
+
+      expect(script).toContain("Token 用量");
+      expect(script).toContain("上下文窗口");
+      expect(script).toContain("未提供");
+    } finally {
+      await reader.close();
+    }
+  });
+
   it("requires the per-launch capability token when one is configured", async () => {
     const reader = await createStandaloneMapReader({
       accessToken: "reader-secret",

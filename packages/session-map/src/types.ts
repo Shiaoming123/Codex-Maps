@@ -48,6 +48,17 @@ export interface SessionSummary {
   forkedFromId: string | null;
   agentNickname: string | null;
   agentRole: string | null;
+  tokenUsage?: TokenUsage | null;
+  contextWindow?: number | null;
+}
+
+export interface TokenUsage {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  reasoningOutputTokens: number | null;
+  totalTokens: number | null;
+  cachedInputTokens: number | null;
+  cacheWriteInputTokens: number | null;
 }
 
 export interface SourceVersion {
@@ -124,6 +135,8 @@ export interface FilesystemCompatProjection {
   createdAt: number | null;
   updatedAt: number | null;
   executionState: ExecutionState;
+  tokenUsage: TokenUsage | null;
+  contextWindow: number | null;
 }
 
 export interface FilesystemCompatSessionMapModuleOptions {

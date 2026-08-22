@@ -39,4 +39,5 @@ export type {
   SessionSummary,
   SnapshotSource,
   SourceVersion,
+  TokenUsage,
 } from "./types.js";
