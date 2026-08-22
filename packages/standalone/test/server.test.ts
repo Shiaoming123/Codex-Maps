@@ -99,6 +99,19 @@ describe("Standalone Map Reader HTTP boundary", () => {
     }
   });
 
+  it("serves an explicit loading state for asynchronous compatibility indexing", async () => {
+    const reader = await createTestReader(sourceFor(snapshot()));
+
+    try {
+      const script = await fetch(`${reader.url}/assets/app.js`).then((response) => response.text());
+
+      expect(script).toContain("正在建立本机 Session 索引");
+      expect(script).toContain("正在建立索引");
+    } finally {
+      await reader.close();
+    }
+  });
+
   it("requires the per-launch capability token when one is configured", async () => {
     const reader = await createStandaloneMapReader({
       accessToken: "reader-secret",

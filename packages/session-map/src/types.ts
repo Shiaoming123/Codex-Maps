@@ -57,6 +57,7 @@ export interface SourceVersion {
 }
 
 export type SessionMapSync =
+  | { phase: "loading"; stale: false }
   | { phase: "ready"; stale: false }
   | { phase: "stale"; stale: true }
   | { phase: "disconnected"; stale: true; reason: "transport-closed" };

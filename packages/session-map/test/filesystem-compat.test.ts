@@ -63,8 +63,10 @@ describe("projectFilesystemCompatJsonl", () => {
 
     try {
       const source = module.observe({ kind: "overview" });
+      await expect.poll(() => source.getSnapshot().sessions[0]?.executionState, { timeout: 1_000 })
+        .toBe("running");
       expect(source.getSnapshot().sessions).toMatchObject([
-        { id: "session-a", cwd: "D:\\Project\\Example", executionState: "running" },
+        { id: "session-a", cwd: "D:\\Project\\Example" },
       ]);
 
       await appendFile(
@@ -74,6 +76,31 @@ describe("projectFilesystemCompatJsonl", () => {
 
       await expect.poll(() => source.getSnapshot().sessions[0]?.executionState, { timeout: 1_000 })
         .toBe("completed");
+    } finally {
+      await module.dispose();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("publishes loading before the initial historical index becomes ready", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codex-maps-loading-"));
+    await writeFile(
+      join(directory, "rollout-loading.jsonl"),
+      '{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-loading","cwd":"D:\\\\Project\\\\Example"}}\n' +
+        '{"type":"event_msg","timestamp":"2026-08-22T10:00:00.000Z","payload":{"type":"task_started"}}',
+    );
+    const module = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: directory,
+      sourceId: "filesystem-loading-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const source = module.observe({ kind: "overview" });
+      expect(source.getSnapshot().sync.phase).toBe("loading");
+      await expect.poll(() => source.getSnapshot().sessions[0]?.id, { timeout: 1_000 })
+        .toBe("session-loading");
+      expect(source.getSnapshot().sync).toEqual({ phase: "ready", stale: false });
     } finally {
       await module.dispose();
       await rm(directory, { recursive: true, force: true });

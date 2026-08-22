@@ -261,6 +261,7 @@ pnpm start:desktop (token hardening rerun)
 ### 已完成
 
 - 新增 `FilesystemCompatSessionMapModule`，复用 `observe({ kind: "overview" }) -> SnapshotSource`，不向 renderer 暴露原始 JSONL。
+- 首次历史扫描改为后台执行：Reader 先发布 loading 快照并开放 HTTP/SSE，索引完成后发布 ready；页面显示可理解的索引中状态。
 - 只解析 `session_meta`、`task_started`、`task_complete`、`turn_aborted`；损坏或截断行忽略，目录读取失败将最后完整快照标为 stale。
 - 默认 standalone/Electron 使用该模式；`CODEX_MAPS_SOURCE=app-server` 可显式保留旧的独立 App Server 诊断路径。
 - UI 新增已完成、已中断状态与来源说明；session 标题以短 id 显示，正文不进入页面。

@@ -176,8 +176,8 @@ export async function createFilesystemCompatSessionMapModule(
   const source = new MutableSnapshotSource(Object.freeze({
     schemaVersion: 1,
     version: Object.freeze({ sourceId: options.sourceId, epoch: 1, revision: 1 }),
-    sync: Object.freeze({ phase: "ready" as const, stale: false as const }),
-    sessions: await loadSessions(options.sessionsDirectory, cache),
+    sync: Object.freeze({ phase: "loading" as const, stale: false as const }),
+    sessions: Object.freeze([]) as readonly SessionSummary[],
   }));
   let refreshing = false;
   const refresh = async () => {
@@ -206,6 +206,7 @@ export async function createFilesystemCompatSessionMapModule(
       refreshing = false;
     }
   };
+  void refresh();
   const timer = setInterval(() => void refresh(), refreshIntervalMs);
   return {
     observe(query) {
