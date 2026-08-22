@@ -26,7 +26,14 @@ export interface ProtocolThread {
   [key: string]: unknown;
 }
 
-export type ExecutionState = "running" | "waiting" | "idle" | "failed" | "unknown";
+export type ExecutionState =
+  | "running"
+  | "waiting"
+  | "idle"
+  | "completed"
+  | "interrupted"
+  | "failed"
+  | "unknown";
 
 export interface SessionSummary {
   id: string;
@@ -108,6 +115,20 @@ export interface SessionMapModuleOptions {
   adapter: AppServerAdapter;
   sourceId: string;
   clientInfo: ClientInfo;
+}
+
+export interface FilesystemCompatProjection {
+  sessionId: string | null;
+  cwd: string | null;
+  createdAt: number | null;
+  updatedAt: number | null;
+  executionState: ExecutionState;
+}
+
+export interface FilesystemCompatSessionMapModuleOptions {
+  sessionsDirectory: string;
+  sourceId: string;
+  refreshIntervalMs?: number;
 }
 
 export type HostCapability = "session.read" | "thread.navigate";

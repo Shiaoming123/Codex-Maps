@@ -1,6 +1,9 @@
 import process from "node:process";
 
-import { createRuntimeReader } from "./runtime-reader.js";
+import {
+  createFilesystemCompatRuntimeReader,
+  createRuntimeReader,
+} from "./runtime-reader.js";
 
 function portFromEnvironment(): number {
   const raw = process.env.CODEX_MAPS_PORT;
@@ -15,15 +18,23 @@ function portFromEnvironment(): number {
 }
 
 async function main(): Promise<void> {
-  const command = process.env.CODEX_MAPS_CODEX_PATH ?? "codex";
-  const reader = await createRuntimeReader({
-    command,
-    port: portFromEnvironment(),
-    sourceId: `standalone-${process.pid}`,
-  });
+  const sourceMode = process.env.CODEX_MAPS_SOURCE ?? "filesystem-compat";
+  const reader = sourceMode === "app-server"
+    ? await createRuntimeReader({
+      command: process.env.CODEX_MAPS_CODEX_PATH ?? "codex",
+      port: portFromEnvironment(),
+      sourceId: `standalone-${process.pid}`,
+    })
+    : await createFilesystemCompatRuntimeReader({
+      port: portFromEnvironment(),
+      sourceId: `filesystem-compat-${process.pid}`,
+      sessionsDirectory: process.env.CODEX_MAPS_SESSIONS_DIR,
+    });
 
   process.stdout.write(`Codex Maps 独立只读地图：${reader.url}\n`);
-  process.stdout.write("数据源由 Codex Maps 持有，未与当前 Codex Desktop 共享连接。\n");
+  process.stdout.write(sourceMode === "app-server"
+    ? "数据源由 Codex Maps 持有，未与当前 Codex Desktop 共享连接。\n"
+    : "数据源为本机 Codex session 文件的只读兼容模式；非官方接口，未共享 Desktop 进程连接。\n");
 
   let closing = false;
   const close = async () => {

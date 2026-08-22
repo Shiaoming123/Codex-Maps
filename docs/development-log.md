@@ -251,3 +251,23 @@ pnpm start:desktop (token hardening rerun)
 ### 记录的决策
 
 按 Host Bridge Spike 的退出条件停止 private bridge 路径；不采用 ASAR 修改、DOM 注入、preload 冒用、进程内存读取或第二 App Server 伪造同步。恢复当前 Desktop 监控开发的前提是官方提供 attach/discovery/event bridge，或用户明确选择将 Codex Maps 改为自己创建和管理任务的独立工作台。
+
+## 2026-08-22 — 本机 JSONL 兼容监控切片
+
+### 结论
+
+当前 Desktop 任务状态可以以本机只读兼容模式落地；这解除的是“独立页面能否观察当前 Desktop Session 状态”的阻塞，不解除 Native Host Gate。
+
+### 已完成
+
+- 新增 `FilesystemCompatSessionMapModule`，复用 `observe({ kind: "overview" }) -> SnapshotSource`，不向 renderer 暴露原始 JSONL。
+- 只解析 `session_meta`、`task_started`、`task_complete`、`turn_aborted`；损坏或截断行忽略，目录读取失败将最后完整快照标为 stale。
+- 默认 standalone/Electron 使用该模式；`CODEX_MAPS_SOURCE=app-server` 可显式保留旧的独立 App Server 诊断路径。
+- UI 新增已完成、已中断状态与来源说明；session 标题以短 id 显示，正文不进入页面。
+- 合成测试、临时文件追加测试、全量 `pnpm verify` 与本机只读 smoke 已通过。
+
+### 待办与风险
+
+- 首次索引会读取历史 JSONL；后续每秒只检查文件元数据并重读变化文件。本机 1,454 个 session 的两个刷新窗口 CPU 约 16ms；目录 watcher/真正的尾随解析留待跨平台性能证据出现后再决定。
+- Token 事件尚未投影数值；完成百分比、标题、Fork、项目/Section、子 Agent 和写操作仍没有足够的稳定来源。
+- macOS/Linux 需要实机验证 session 路径和追加行为；当前只宣称 Windows 本机 smoke。

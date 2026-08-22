@@ -5,6 +5,10 @@ export {
   createAppServerClient,
 } from "./app-server-client.js";
 export { createHostBridgeModule } from "./host-bridge.js";
+export {
+  createFilesystemCompatSessionMapModule,
+  projectFilesystemCompatJsonl,
+} from "./filesystem-compat.js";
 export { StdioAppServerAdapter } from "./stdio.js";
 export type { StdioAppServerAdapterOptions } from "./stdio.js";
 export type {
@@ -15,6 +19,8 @@ export type {
   AppServerRequestOptions,
   ClientInfo,
   ExecutionState,
+  FilesystemCompatProjection,
+  FilesystemCompatSessionMapModuleOptions,
   HostBridgeAdapter,
   HostBridgeClient,
   HostBridgeConnection,

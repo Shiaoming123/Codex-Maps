@@ -10,6 +10,12 @@ export interface StandaloneMapReaderOptions {
   createModule(): Promise<SessionMapModule>;
   host?: string;
   port?: number;
+  source?: StandaloneMapReaderSource;
+}
+
+export interface StandaloneMapReaderSource {
+  kind: "standalone-app-server" | "filesystem-compat";
+  desktopShared: false;
 }
 
 export interface StandaloneMapReader {
@@ -29,12 +35,9 @@ const CONTENT_SECURITY_POLICY = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-function snapshotEnvelope(snapshot: SessionMapSnapshot): object {
+function snapshotEnvelope(snapshot: SessionMapSnapshot, source: StandaloneMapReaderSource): object {
   return {
-    source: {
-      kind: "standalone-app-server",
-      desktopShared: false,
-    },
+    source,
     snapshot,
   };
 }
@@ -56,9 +59,10 @@ export async function createStandaloneMapReader(
 ): Promise<StandaloneMapReader> {
   const module = await options.createModule();
   const source = module.observe({ kind: "overview" });
+  const readerSource = options.source ?? { kind: "standalone-app-server", desktopShared: false };
   const eventClients = new Set<ServerResponse>();
   const publishSnapshot = () => {
-    const event = `event: snapshot\ndata: ${JSON.stringify(snapshotEnvelope(source.getSnapshot()))}\n\n`;
+    const event = `event: snapshot\ndata: ${JSON.stringify(snapshotEnvelope(source.getSnapshot(), readerSource))}\n\n`;
     for (const client of eventClients) {
       client.write(event);
     }
@@ -89,7 +93,7 @@ export async function createStandaloneMapReader(
     }
     if (request.method === "GET" && requestUrl.pathname === "/api/snapshot") {
       response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-      response.end(JSON.stringify(snapshotEnvelope(source.getSnapshot())));
+      response.end(JSON.stringify(snapshotEnvelope(source.getSnapshot(), readerSource)));
       return;
     }
     if (request.method === "GET" && requestUrl.pathname === "/api/events") {

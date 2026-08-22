@@ -46,7 +46,7 @@ Host Bridge 是唯一的 App Server 连接与写操作出口；两个 renderer �
 5. 持续处理 `thread/*`、`turn/*`、`item/*`、审批/输入和 Token 事件。
 6. 断线后停止 mutation，重新握手，拉取权威快照，再恢复命令入口。
 
-禁止用直接读写 rollout JSONL/SQLite 作为正常降级。只读诊断工具也必须显式说明它读取的是 App Server，而不是私有存储。
+禁止直接写入 rollout JSONL/SQLite，也禁止把私有存储伪装为官方 App Server。ADR 0003 允许一个窄化例外：用户显式选择的本机、只读 JSONL 兼容模式可提取 `session_meta` 与任务状态事件，驱动当前 Desktop Session 的状态地图；它不发送命令、不显示正文、不写数据库或日志，且必须以“非官方兼容模式”展示来源与失效风险。
 
 ## 4. Session Store
 

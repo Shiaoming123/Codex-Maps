@@ -5,7 +5,10 @@ import { app, BrowserWindow, Menu, session } from "electron";
 
 import { startElectronDesktopApp } from "./electron-main.js";
 import { createDesktopMapShell } from "./desktop-map-shell.js";
-import { createRuntimeReader } from "../../standalone/src/runtime-reader.js";
+import {
+  createFilesystemCompatRuntimeReader,
+  createRuntimeReader,
+} from "../../standalone/src/runtime-reader.js";
 
 function portFromEnvironment(): number {
   const raw = process.env.CODEX_MAPS_PORT;
@@ -31,15 +34,22 @@ async function start(): Promise<void> {
       session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
         callback(false);
       });
-      const command = process.env.CODEX_MAPS_CODEX_PATH ?? "codex";
+      const sourceMode = process.env.CODEX_MAPS_SOURCE ?? "filesystem-compat";
       return createDesktopMapShell({
         createReader: () =>
-          createRuntimeReader({
-            accessToken: randomBytes(32).toString("base64url"),
-            command,
-            port: portFromEnvironment(),
-            sourceId: `desktop-${process.pid}`,
-          }),
+          sourceMode === "app-server"
+            ? createRuntimeReader({
+              accessToken: randomBytes(32).toString("base64url"),
+              command: process.env.CODEX_MAPS_CODEX_PATH ?? "codex",
+              port: portFromEnvironment(),
+              sourceId: `desktop-${process.pid}`,
+            })
+            : createFilesystemCompatRuntimeReader({
+              accessToken: randomBytes(32).toString("base64url"),
+              port: portFromEnvironment(),
+              sourceId: `filesystem-compat-${process.pid}`,
+              sessionsDirectory: process.env.CODEX_MAPS_SESSIONS_DIR,
+            }),
         createWindow: (options) => new BrowserWindow(options),
       });
     },
