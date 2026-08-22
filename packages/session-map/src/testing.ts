@@ -72,6 +72,46 @@ class AsyncLineQueue implements AsyncIterable<string> {
   }
 }
 
+export class MemoryJsonlConnection implements JsonlConnection {
+  readonly #queue = new AsyncLineQueue();
+  readonly #sent: Array<Record<string, unknown>> = [];
+  #released = false;
+  releaseCalls = 0;
+
+  readonly lines: AsyncIterable<string> = this.#queue;
+
+  async send(line: string): Promise<void> {
+    if (this.#released) {
+      throw new Error("MemoryJsonlConnection is released");
+    }
+    this.#sent.push(JSON.parse(line) as Record<string, unknown>);
+  }
+
+  async release(): Promise<void> {
+    this.releaseCalls += 1;
+    if (this.#released) {
+      return;
+    }
+    this.#released = true;
+    this.#queue.close();
+  }
+
+  sentRequests(): Array<{ id: number; method: string; params: unknown }> {
+    return this.#sent.filter(
+      (message): message is { id: number; method: string; params: unknown } =>
+        typeof message.id === "number" && typeof message.method === "string",
+    );
+  }
+
+  respond(id: number, result: unknown): void {
+    this.#queue.push(JSON.stringify({ id, result }));
+  }
+
+  disconnect(): void {
+    this.#queue.close();
+  }
+}
+
 export class MemoryAppServerAdapter implements AppServerAdapter {
   readonly sent: SentMessage[] = [];
   readonly #scenario: MemoryAppServerScenario;

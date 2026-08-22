@@ -16,13 +16,13 @@
 
 ### CM-002 生产级 App Server 客户端
 
-状态：`doing / single-reader-foundation-done`
+状态：`doing / client-seam-and-concurrency-done`
 
 验收：TypeScript 客户端完成 initialize、分页、read、订阅、超时、能力探测和结构化错误；断线后重新握手；未知 mutation 结果不自动重放。
 
-当前进展：单 reader pump 已替代每个 request 自行读取 iterator；response、notification 和 server request 从同一输入流分类。`thread/status/changed` 可发布新 revision，初始化分页期间到达的通知不会丢失；意外 EOF 保留最后快照并发布 disconnected/stale；未知 server request 返回原 ID 的 `-32601`，绝不自动批准。
+当前进展：单 reader pump 已替代每个 request 自行读取 iterator；response、notification 和 server request 从同一输入流分类。抽出的 UI 无关 `AppServerClient` 已验证并发 request 的倒序 response 仍按 request id 各自完成；每个请求独立 timeout，不影响后续请求；EOF 和重复 dispose 都只 release 底层连接一次。`thread/status/changed` 可发布新 revision，初始化分页期间到达的通知不会丢失；意外 EOF 保留最后快照并发布 disconnected/stale；未知 server request 返回原 ID 的 `-32601`，绝不自动批准。
 
-当前缺口：尚未实现 request timeout、逆序并发 response 的独立 client 合同测试、writer queue、诊断事件、stderr 摘要、重新 acquire/握手、`thread/read` 和其余通知 reducer，因此仍不可称为生产级客户端。
+当前缺口：writer queue 的写失败合同、orphan/duplicate response 诊断事件、stderr 摘要、重新 acquire/握手、`thread/read` 和其余通知 reducer 尚未完成，因此仍不可称为生产级客户端。
 
 ### CM-003 规范化 Session Store
 

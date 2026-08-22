@@ -121,3 +121,29 @@ Python 协议基线将在最终 checkpoint 与 TypeScript 验证一起重跑。�
 - `thread/read`、goal、plan、token 与 turn reducers。
 
 因此 CM-002 状态是 `single-reader-foundation-done`，不是 production complete。下一条最小切片应抽出可公开测试的 App Server client seam，先完成“两个并发 request、逆序 response 仍各自正确完成”和 request timeout。
+
+## 2026-08-22 — CM-002 可验证客户端边界
+
+### 本轮目标
+
+把单 reader pump 收敛为 UI 无关的客户端边界，并证明长期 JSONL 连接在并发、超时和关闭竞争下不会错配或重复释放。
+
+### 已完成
+
+- 新增 `AppServerClient`：单一输入 reader、按递增 request id 的 pending map、私有串行 writer 和一次性 terminal close。
+- `SessionMapModule` 改为消费该客户端；其公开边界仍然只有 `observe()` 快照，UI 不接触 JSONL envelope、timer 或传输生命周期。
+- 新增 `MemoryJsonlConnection` 用于可控时序合同：两个并发请求的 response 以 `2 → 1` 逆序到达时，结果仍各自正确完成。
+- 每个请求拥有独立 timeout；一个无 response 的请求超时后，另一个请求仍能正常完成。
+- terminal close（含 EOF）会释放底层连接；重复 `dispose()` 仍只调用一次 `release()`。通知与关闭 listener 的异常被隔离，不能杀死共享 reader。
+
+### 决策与问题
+
+1. **不把并发协议暴露给 UI。** `AppServerClient` 是内部核心 seam，测试可导入，页面不能直接依赖；这避免两个 renderer 各自处理 raw event。
+2. **timeout 不等于未送达。** 当前错误只表明 delivery unknown，因此没有自动重试或重放，尤其不能用于未来 mutation。
+3. **测试曾出现 PromiseRejectionHandledWarning。** 原因是 fake timer 先触发 rejection、后注册断言；已改为在创建请求时立即绑定 rejection 断言，最终测试无未处理 rejection。
+
+### 剩余门禁
+
+- 为 writer 失败、orphan/duplicate response、server request 与本地 request id 碰撞、EOF/release 竞争补充合同测试。
+- 实现 reconnect/re-handshake 和全量 reconcile 后，才能把 disconnected/stale 恢复为 ready。
+- 再进入 `thread/read`、goal/plan/token 与二级详情 reducer；不在此阶段提前接入 UI。

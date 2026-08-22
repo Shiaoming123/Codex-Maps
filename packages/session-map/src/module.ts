@@ -1,5 +1,4 @@
 import type {
-  JsonlConnection,
   ProtocolThread,
   SessionMapModule,
   SessionMapModuleOptions,
@@ -7,28 +6,11 @@ import type {
   SessionSummary,
   SnapshotSource,
 } from "./types.js";
-
-interface ResponseEnvelope {
-  id: number;
-  result?: unknown;
-  error?: { code?: number; message?: string };
-}
-
-interface NotificationEnvelope {
-  method: string;
-  params?: unknown;
-}
+import { createAppServerClient } from "./app-server-client.js";
 
 interface ThreadListResponse {
   data: ProtocolThread[];
   nextCursor: string | null;
-}
-
-class AppServerRequestError extends Error {
-  constructor(method: string, error: ResponseEnvelope["error"]) {
-    super(`${method} failed: ${error?.message ?? "unknown error"}`);
-    this.name = "AppServerRequestError";
-  }
 }
 
 class MutableSnapshotSource implements SnapshotSource<SessionMapSnapshot> {
@@ -53,139 +35,6 @@ class MutableSnapshotSource implements SnapshotSource<SessionMapSnapshot> {
     this.#snapshot = snapshot;
     for (const listener of [...this.#listeners]) {
       listener();
-    }
-  }
-}
-
-class RequestChannel {
-  readonly #connection: JsonlConnection;
-  readonly #pending = new Map<
-    number,
-    {
-      method: string;
-      resolve(value: unknown): void;
-      reject(reason: Error): void;
-    }
-  >();
-  readonly #notificationListeners = new Set<(notification: NotificationEnvelope) => void>();
-  readonly #closeListeners = new Set<(error: Error) => void>();
-  #closedError: Error | null = null;
-  #nextId = 1;
-
-  constructor(connection: JsonlConnection) {
-    this.#connection = connection;
-    void this.#readLoop();
-  }
-
-  async notify(method: string, params: unknown): Promise<void> {
-    await this.#connection.send(JSON.stringify({ method, params }));
-  }
-
-  async request<T>(method: string, params: unknown): Promise<T> {
-    if (this.#closedError) {
-      throw this.#closedError;
-    }
-    const id = this.#nextId++;
-    const response = new Promise<T>((resolve, reject) => {
-      this.#pending.set(id, {
-        method,
-        resolve: (value) => resolve(value as T),
-        reject,
-      });
-    });
-
-    try {
-      await this.#connection.send(JSON.stringify({ id, method, params }));
-    } catch (error) {
-      this.#pending.delete(id);
-      throw error;
-    }
-    return response;
-  }
-
-  subscribeNotifications(listener: (notification: NotificationEnvelope) => void): () => void {
-    this.#notificationListeners.add(listener);
-    return () => this.#notificationListeners.delete(listener);
-  }
-
-  subscribeClosed(listener: (error: Error) => void): () => void {
-    this.#closeListeners.add(listener);
-    return () => this.#closeListeners.delete(listener);
-  }
-
-  dispose(): void {
-    this.#notificationListeners.clear();
-    this.#closeListeners.clear();
-    this.#close(new Error("app-server request channel disposed"));
-  }
-
-  async #readLoop(): Promise<void> {
-    try {
-      for await (const line of this.#connection.lines) {
-        let message: unknown;
-        try {
-          message = JSON.parse(line) as unknown;
-        } catch {
-          this.#close(new Error("app-server returned malformed JSON"));
-          return;
-        }
-
-        if (typeof message !== "object" || message === null) {
-          this.#close(new Error("app-server returned malformed envelope"));
-          return;
-        }
-
-        const envelope = message as Partial<ResponseEnvelope & NotificationEnvelope>;
-        if (typeof envelope.id === "number" && typeof envelope.method !== "string") {
-          const pending = this.#pending.get(envelope.id);
-          if (!pending) {
-            continue;
-          }
-          this.#pending.delete(envelope.id);
-          if (envelope.error) {
-            pending.reject(new AppServerRequestError(pending.method, envelope.error));
-          } else {
-            pending.resolve(envelope.result);
-          }
-          continue;
-        }
-
-        if (typeof envelope.id === "number" && typeof envelope.method === "string") {
-          await this.#connection.send(
-            JSON.stringify({
-              id: envelope.id,
-              error: {
-                code: -32601,
-                message: `unsupported server request: ${envelope.method}`,
-              },
-            }),
-          );
-          continue;
-        }
-
-        if (typeof envelope.method === "string" && envelope.id === undefined) {
-          for (const listener of this.#notificationListeners) {
-            listener({ method: envelope.method, params: envelope.params });
-          }
-        }
-      }
-      this.#close(new Error("app-server disconnected"));
-    } catch (error) {
-      this.#close(error instanceof Error ? error : new Error(String(error)));
-    }
-  }
-
-  #close(error: Error): void {
-    if (this.#closedError) {
-      return;
-    }
-    this.#closedError = error;
-    for (const pending of this.#pending.values()) {
-      pending.reject(error);
-    }
-    this.#pending.clear();
-    for (const listener of [...this.#closeListeners]) {
-      listener(error);
     }
   }
 }
@@ -248,7 +97,7 @@ function normalizeThread(thread: ProtocolThread): SessionSummary {
   };
 }
 
-async function loadAllThreads(channel: RequestChannel): Promise<ProtocolThread[]> {
+async function loadAllThreads(channel: { request<T>(method: string, params: unknown): Promise<T> }): Promise<ProtocolThread[]> {
   const byId = new Map<string, ProtocolThread>();
   const seenCursors = new Set<string>();
   let cursor: string | null = null;
@@ -287,7 +136,7 @@ export async function createSessionMapModule(
   options: SessionMapModuleOptions,
 ): Promise<SessionMapModule> {
   const connection = await options.adapter.acquire();
-  const channel = new RequestChannel(connection);
+  const channel = createAppServerClient(connection, { defaultTimeoutMs: 10_000 });
   let source: MutableSnapshotSource | null = null;
   const pendingStatuses = new Map<string, ProtocolThread["status"]>();
   const unsubscribeNotifications = channel.subscribeNotifications((notification) => {
@@ -410,15 +259,13 @@ export async function createSessionMapModule(
       async dispose() {
         unsubscribeNotifications();
         unsubscribeClosed();
-        channel.dispose();
-        await connection.release();
+        await channel.dispose();
       },
     };
   } catch (error) {
     unsubscribeNotifications();
     unsubscribeClosed();
-    channel.dispose();
-    await connection.release();
+    await channel.dispose();
     throw error;
   }
 }

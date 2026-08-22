@@ -105,3 +105,11 @@
 决定：Host Bridge 在 composition root 中只 attach 一次；内嵌页和副屏页各持有一个 lease，共享同一 SnapshotSource 与导航适配器。释放某个 lease 不关闭事实源；只有 Bridge owner 可以释放底层连接。未知 fingerprint 在 attach 前拒绝，导航必须核对宿主回执中的 exact thread id。
 
 原因：这个边界同时编码了单 owner、多 renderer、fail-closed 和安全跳转，避免把 Electron IPC、ASAR hash、PID 或原始协议 envelope 暴露给 React。合同与权衡见 ADR 0002。
+
+## 2026-08-22 — App Server 客户端成为 UI 无关的单读者深模块
+
+决定：将 JSONL 请求/响应分发从 `SessionMapModule` 抽取为 `AppServerClient`。它独占一个输入 reader，以单调 request id 管理并发 pending 请求，以私有 writer queue 串行输出；UI 和页面只继续消费 `SessionMapModule.observe()` 的快照。
+
+约束：每个请求独立超时，超时只表示投递结果未知，不自动重试或重放；通知监听器、关闭监听器的异常不得终止 reader；`dispose()` 可以重复调用，但底层连接只能释放一次。未知或迟到 response 不得错误完成其他请求。
+
+原因：长期连接的并发、乱序响应、server request 拒绝和关闭竞争属于协议复杂度，不能泄漏给 Store 或 UI。集中在可替换 `JsonlConnection` seam 后，Memory fixture 能以确定时序验证，而 `SessionMapModule` 保持领域快照边界。

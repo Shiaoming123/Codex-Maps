@@ -79,6 +79,27 @@ export interface JsonlConnection {
   release(): Promise<void>;
 }
 
+export interface AppServerNotification {
+  method: string;
+  params?: unknown;
+}
+
+export interface AppServerRequestOptions {
+  timeoutMs?: number;
+}
+
+export interface AppServerClient {
+  request<T>(method: string, params: unknown, options?: AppServerRequestOptions): Promise<T>;
+  notify(method: string, params: unknown): Promise<void>;
+  subscribeNotifications(listener: (notification: AppServerNotification) => void): () => void;
+  subscribeClosed(listener: (error: Error) => void): () => void;
+  dispose(): Promise<void>;
+}
+
+export interface AppServerClientOptions {
+  defaultTimeoutMs: number;
+}
+
 export interface AppServerAdapter {
   acquire(): Promise<JsonlConnection>;
 }
