@@ -286,3 +286,19 @@ pnpm start:desktop (token hardening rerun)
 - 快捷方式只启动本仓库的源码开发壳，不修改 Codex Desktop、系统安装目录或注册表。
 - 首次或源码变更后仍会构建 TypeScript；未提供后台更新、开机启动、安装/卸载或代码签名。
 - 已存在同名快捷方式时，脚本默认拒绝覆盖，必须显式 `-Force`。
+
+## 2026-08-22 — Reader 能力契约门禁
+
+### 决定
+
+将数据源能力作为独立 Reader envelope 的显式字段返回，而不是让页面根据 JSON-RPC 方法名或某个字段存在性自行推断。所有当前 Reader 都声明只读；filesystem-compat 只声明 Session 元数据、标题、状态和已验证 Token 的读取能力。
+
+### 验证
+
+- 默认 standalone-app-server 源声明 `session.read`、标题、状态和已知关系读取能力。
+- filesystem-compat 源声明 `session.read`、标题、状态和 Token 读取能力，并明确不声明项目、置顶、重命名、归档、删除或宿主导航。
+- 9 个 Standalone HTTP 合约测试、TypeScript 类型检查、全量测试和 Python 测试通过；测试只使用合成快照，不包含真实 Session 内容。
+
+### 影响
+
+后续 UI 和 mutation 入口必须以该 capability 集合为门禁；缺少来源能力时保持禁用或解释性降级，不能把“接口存在”当作“当前宿主可用”。

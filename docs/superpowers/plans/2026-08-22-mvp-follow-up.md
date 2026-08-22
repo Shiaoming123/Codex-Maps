@@ -110,8 +110,11 @@
 - Modify: `packages/session-map/src/types.ts`
 - Modify: `packages/session-map/src/module.ts`
 - Modify: `packages/session-map/src/host-bridge.ts`
+- Modify: `packages/standalone/src/server.ts`
+- Modify: `packages/standalone/src/runtime-reader.ts`
 - Test: `packages/session-map/test/host-bridge.test.ts`
 - Test: `packages/session-map/test/session-map.test.ts`
+- Test: `packages/standalone/test/server.test.ts`
 - Modify: `docs/capability-matrix.md`
 - Modify: `docs/issues.md`
 
@@ -119,9 +122,9 @@
 - No UI control is enabled solely because a method name exists in a generated contract.
 - `thread/read`, project/Section fields, precise navigation, and mutations require a source capability and an evidence-backed adapter.
 
-- [ ] Add capability tests for unavailable project, navigation, pin, archive, delete, and title sources.
+- [x] Add capability tests for unavailable project, navigation, pin, archive, delete, and title sources.
 - [x] Keep compatibility mode read-only and make unsupported controls explain the missing source rather than silently failing.
-- [ ] Run contract tests against synthetic generated-contract fixtures; do not use real session content.
+- [x] Run contract tests against synthetic generated-contract fixtures; do not use real session content.
 - [x] Update the capability matrix and commit `chore: tighten unsupported capability gates`.
 
 ### Task 6: Build the relationship-map vertical slice when source evidence exists
@@ -165,4 +168,4 @@
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 5.
+- Current execution point: Task 6; relationship fields remain source-gated and are not inferred when absent.

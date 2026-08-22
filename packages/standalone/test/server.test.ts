@@ -64,9 +64,58 @@ describe("Standalone Map Reader HTTP boundary", () => {
         source: {
           kind: "standalone-app-server",
           desktopShared: false,
+          readOnly: true,
+          capabilities: [
+            "session.read",
+            "session.title.read",
+            "session.status.read",
+            "session.relationship.read",
+          ],
         },
         snapshot: snapshot(),
       });
+    } finally {
+      await reader.close();
+    }
+  });
+
+  it("publishes explicit read-only capability gates for the filesystem compatibility source", async () => {
+    const reader = await createStandaloneMapReader({
+      createModule: async () => moduleFor(sourceFor(snapshot())),
+      port: nextPort++,
+      source: {
+        kind: "filesystem-compat",
+        desktopShared: false,
+        readOnly: true,
+        capabilities: [
+          "session.read",
+          "session.title.read",
+          "session.status.read",
+          "session.token.read",
+        ],
+      },
+    });
+
+    try {
+      const payload = await fetch(`${reader.url}/api/snapshot`).then((response) => response.json());
+
+      expect(payload.source).toEqual({
+        kind: "filesystem-compat",
+        desktopShared: false,
+        readOnly: true,
+        capabilities: [
+          "session.read",
+          "session.title.read",
+          "session.status.read",
+          "session.token.read",
+        ],
+      });
+      expect(payload.source.capabilities).not.toContain("session.project.read");
+      expect(payload.source.capabilities).not.toContain("session.rename");
+      expect(payload.source.capabilities).not.toContain("session.pin");
+      expect(payload.source.capabilities).not.toContain("session.archive");
+      expect(payload.source.capabilities).not.toContain("session.delete");
+      expect(payload.source.capabilities).not.toContain("thread.navigate");
     } finally {
       await reader.close();
     }

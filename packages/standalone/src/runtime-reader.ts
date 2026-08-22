@@ -47,7 +47,17 @@ export function createFilesystemCompatRuntimeReader(
     accessToken: options.accessToken,
     host: "127.0.0.1",
     port: options.port,
-    source: { kind: "filesystem-compat", desktopShared: false },
+    source: {
+      kind: "filesystem-compat",
+      desktopShared: false,
+      readOnly: true,
+      capabilities: [
+        "session.read",
+        "session.title.read",
+        "session.status.read",
+        "session.token.read",
+      ],
+    },
     createModule: async () =>
       createFilesystemCompatSessionMapModule({
         sessionsDirectory: options.sessionsDirectory ?? join(homedir(), ".codex", "sessions"),

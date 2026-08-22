@@ -16,7 +16,23 @@ export interface StandaloneMapReaderOptions {
 export interface StandaloneMapReaderSource {
   kind: "standalone-app-server" | "filesystem-compat";
   desktopShared: false;
+  readOnly: true;
+  capabilities: readonly ReaderCapability[];
 }
+
+export type ReaderCapability =
+  | "session.read"
+  | "session.title.read"
+  | "session.status.read"
+  | "session.token.read"
+  | "session.project.read"
+  | "session.relationship.read"
+  | "session.rename"
+  | "session.pin"
+  | "session.archive"
+  | "session.unarchive"
+  | "session.delete"
+  | "thread.navigate";
 
 export interface StandaloneMapReader {
   readonly browserUrl: string;
@@ -59,7 +75,17 @@ export async function createStandaloneMapReader(
 ): Promise<StandaloneMapReader> {
   const module = await options.createModule();
   const source = module.observe({ kind: "overview" });
-  const readerSource = options.source ?? { kind: "standalone-app-server", desktopShared: false };
+  const readerSource: StandaloneMapReaderSource = options.source ?? {
+    kind: "standalone-app-server",
+    desktopShared: false,
+    readOnly: true,
+    capabilities: [
+      "session.read",
+      "session.title.read",
+      "session.status.read",
+      "session.relationship.read",
+    ],
+  };
   const eventClients = new Set<ServerResponse>();
   const publishSnapshot = () => {
     const event = `event: snapshot\ndata: ${JSON.stringify(snapshotEnvelope(source.getSnapshot(), readerSource))}\n\n`;
