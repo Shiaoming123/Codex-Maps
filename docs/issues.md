@@ -96,6 +96,8 @@
 
 当前缺口：Windows 安装/卸载 smoke、macOS Apple Silicon 真实启动、Codex 可执行文件发现 adapter、安装器、签名/notarization 与自动更新尚未进入实现，因此不能称为可分发桌面应用。
 
+页面进展：独立 Reader 首页已改为工作区泳道地图、筛选和按需详情抽屉；真实工作区/项目语义仍由 CM-101 的受支持数据源门禁决定。
+
 ## P1 — 项目管理与跨平台
 
 ### CM-101 项目/Section 读取展示

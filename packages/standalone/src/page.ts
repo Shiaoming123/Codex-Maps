@@ -4,81 +4,33 @@ export function standalonePage(accessToken?: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Codex Maps · 独立只读地图</title>
+  <title>Codex Maps</title>
   <style>
-    :root { color-scheme: light; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #20252c; background: #f5f7fa; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-width: 980px; background: #f5f7fa; }
-    button, input { font: inherit; }
-    .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: #fff; border-bottom: 1px solid #e4e8ee; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.2px; }
-    .mark { width: 24px; height: 24px; border-radius: 7px; background: #232a33; display: grid; place-items: center; color: white; font-size: 12px; }
-    .mode { color: #5d6775; font-size: 13px; }
-    .layout { display: grid; grid-template-columns: 256px minmax(540px, 1fr) 320px; min-height: calc(100vh - 64px); }
-    .filters, .detail { background: #fff; padding: 22px; }
-    .filters { border-right: 1px solid #e4e8ee; }
-    .detail { border-left: 1px solid #e4e8ee; }
-    .content { padding: 24px 28px 42px; }
-    h1, h2, h3, p { margin: 0; }
-    h1 { font-size: 21px; }
-    h2 { font-size: 15px; }
-    h3 { font-size: 13px; color: #657082; font-weight: 600; margin-bottom: 10px; }
-    .sub { margin-top: 6px; color: #697586; font-size: 13px; }
-    .source { margin-top: 20px; padding: 13px 15px; display: flex; justify-content: space-between; gap: 16px; border: 1px solid #dfe5ec; border-radius: 10px; background: #fff; color: #4e5968; font-size: 12px; }
-    .source strong { color: #27303b; }
-    .notice { margin: 16px 0 20px; padding: 12px 14px; border-radius: 9px; background: #edf1f5; color: #4e5968; font-size: 13px; line-height: 1.5; }
-    .notice.stale { background: #fff5df; color: #74551e; }
-    .notice.error { background: #fdeceb; color: #8a3530; }
-    .field { width: 100%; height: 38px; padding: 0 11px; border: 1px solid #d9e0e8; border-radius: 8px; outline: none; color: #27303b; }
-    .field:focus { border-color: #697586; box-shadow: 0 0 0 3px #e8edf3; }
-    .section { margin-top: 24px; }
-    .choices { display: grid; gap: 4px; }
-    .choice { width: 100%; text-align: left; border: 0; border-radius: 7px; background: transparent; padding: 9px 10px; color: #4d5867; cursor: pointer; }
-    .choice:hover, .choice.active { background: #eef2f6; color: #20252c; font-weight: 600; }
-    .choice span { float: right; font-size: 12px; color: #7d8794; font-weight: 400; }
-    .lanes { display: grid; gap: 18px; }
-    .lane { border: 1px solid #e0e5eb; border-radius: 12px; overflow: hidden; background: #fff; }
-    .lane-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #edf0f3; background: #fbfcfd; }
-    .lane-name { font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .lane-count { color: #778291; font-size: 12px; }
-    .cards { padding: 10px; display: grid; gap: 8px; }
-    .card { width: 100%; text-align: left; border: 1px solid #e3e8ee; border-radius: 9px; padding: 12px 13px; background: #fff; cursor: pointer; }
-    .card:hover, .card.selected { border-color: #7c8795; background: #f8fafc; }
-    .card-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .card-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 650; }
-    .preview { margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #697586; font-size: 12px; }
-    .time { margin-top: 8px; color: #8a94a3; font-size: 11px; }
-    .badge { flex: 0 0 auto; border-radius: 999px; padding: 3px 7px; background: #edf1f5; color: #4b5664; font-size: 11px; }
-    .badge.running { background: #e7eff8; color: #315d88; }
-    .badge.waiting { background: #fff2db; color: #7c5719; }
-    .badge.failed { background: #fde9e7; color: #903c37; }
-    .empty { padding: 42px 18px; text-align: center; color: #7b8695; font-size: 13px; }
-    .detail-empty { color: #7b8695; font-size: 13px; line-height: 1.6; padding-top: 12px; }
-    .detail-title { font-size: 16px; line-height: 1.4; word-break: break-word; }
-    .detail-row { margin-top: 18px; }
-    .label { color: #7b8695; font-size: 11px; text-transform: uppercase; letter-spacing: .45px; }
-    .value { margin-top: 5px; color: #3e4855; font-size: 13px; line-height: 1.55; word-break: break-word; white-space: pre-wrap; }
-    .boundary { margin-top: 30px; padding-top: 18px; border-top: 1px solid #edf0f3; color: #7b8695; font-size: 12px; line-height: 1.6; }
-    .revision { color: #7b8695; font-size: 12px; white-space: nowrap; }
+    :root { color-scheme: light; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #1d2734; background: #f5f7fa; }
+    * { box-sizing: border-box; } body { min-width: 1024px; margin: 0; background: #f5f7fa; } button, input { font: inherit; } button { cursor: pointer; }
+    .topbar { height: 58px; display: flex; align-items: center; gap: 28px; padding: 0 24px; background: #fff; border-bottom: 1px solid #e2e7ee; }
+    .brand { display: flex; align-items: center; gap: 9px; color: #202a36; font-size: 15px; font-weight: 700; white-space: nowrap; }.mark { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 7px; background: #27313d; color: white; font-size: 11px; }
+    .topnav { display: flex; align-self: stretch; gap: 4px; }.topnav button { position: relative; padding: 0 10px; border: 0; background: transparent; color: #697586; font-size: 13px; }.topnav button.active { color: #202a36; font-weight: 650; }.topnav button.active::after { position: absolute; right: 10px; bottom: 0; left: 10px; height: 2px; background: #27313d; content: ""; }
+    .top-status { display: flex; align-items: center; gap: 7px; margin-left: auto; color: #697586; font-size: 12px; }.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #8a96a5; }.sync-dot.ready { background: #4b718d; box-shadow: 0 0 0 3px #e8f0f6; }.sync-dot.stale, .sync-dot.error { background: #a66d26; box-shadow: 0 0 0 3px #fff1dc; }
+    .shell { display: grid; grid-template-columns: 230px minmax(0, 1fr); min-height: calc(100vh - 58px); }.sidebar { padding: 18px 13px 30px; background: #fff; border-right: 1px solid #e2e7ee; }.side-item { width: 100%; display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: #566271; text-align: left; font-size: 13px; }.side-item:hover, .side-item.active { color: #202a36; background: #eef2f6; font-weight: 650; }.side-icon { width: 17px; text-align: center; color: #768293; font-size: 14px; }.side-tail { margin-left: auto; color: #8a95a3; font-size: 12px; font-weight: 400; }.side-cap { margin: 22px 10px 7px; color: #8a95a3; font-size: 10px; font-weight: 700; letter-spacing: .45px; text-transform: uppercase; }.side-note { margin: 24px 10px 0; padding-top: 15px; border-top: 1px solid #edf0f3; color: #7a8695; font-size: 11px; line-height: 1.65; }
+    .main { min-width: 0; padding: 25px 30px 36px; }.crumb { color: #8994a2; font-size: 11px; }.head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin-top: 8px; }h1, h2, h3, p { margin: 0; }h1 { font-size: 22px; letter-spacing: -.35px; }.sub { margin-top: 5px; color: #748091; font-size: 13px; }
+    .view-switch { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid #dfe5ec; border-radius: 8px; background: #fff; }.view-switch button { padding: 5px 9px; border: 0; border-radius: 5px; background: transparent; color: #687485; font-size: 12px; }.view-switch button.active { background: #28313d; color: #fff; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }.metric { min-height: 98px; padding: 13px 15px; border: 1px solid #e0e6ed; border-radius: 10px; background: #fff; }.metric-label { color: #6f7b8b; font-size: 12px; }.metric-value { margin-top: 10px; color: #222c38; font-size: 25px; font-weight: 700; letter-spacing: -.7px; }.metric-detail { margin-top: 3px; color: #8994a3; font-size: 11px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; padding: 9px; border: 1px solid #e0e6ed; border-radius: 10px; background: #fff; }.search { width: 230px; height: 32px; padding: 0 10px; border: 1px solid #d8e0e8; border-radius: 6px; color: #2b3541; outline: none; font-size: 12px; }.search:focus { border-color: #8291a1; box-shadow: 0 0 0 3px #edf2f6; }.chip { padding: 5px 9px; border: 0; border-radius: 999px; background: transparent; color: #657182; font-size: 12px; }.chip:hover, .chip.active { color: #27313d; background: #e9eef3; font-weight: 650; }.toolbar-spacer { flex: 1; }.quiet-button { padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: #697586; font-size: 12px; }.quiet-button:hover { background: #eff3f6; color: #27313d; }
+    .connection-note { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #edf2f6; color: #5e6c7c; font-size: 12px; }.connection-note.stale { background: #fff3dd; color: #7e5d2c; }.connection-note.error { background: #fdeeee; color: #8d4642; }
+    .panel { margin-top: 16px; overflow: hidden; border: 1px solid #dfe5ec; border-radius: 11px; background: #fff; }.panel-head { display: flex; align-items: center; gap: 11px; min-height: 49px; padding: 0 15px; border-bottom: 1px solid #e9edf1; }.panel-title { color: #293340; font-size: 13px; font-weight: 700; }.panel-sub { color: #86919f; font-size: 11px; }.panel-actions { display: flex; gap: 4px; margin-left: auto; }
+    .lane-list { padding: 2px 16px 10px; }.lane { display: grid; grid-template-columns: 185px 30px minmax(0, 1fr); align-items: stretch; padding: 11px 0; border-bottom: 1px solid #edf0f3; }.lane:last-child { border-bottom: 0; }.workspace-card { width: 100%; align-self: center; padding: 12px; border: 1px solid #dfe5ec; border-radius: 8px; background: #fff; color: inherit; text-align: left; }.workspace-card:hover, .workspace-card.active { border-color: #7c8998; box-shadow: 0 0 0 1px #7c8998 inset; }.workspace-title { overflow: hidden; color: #26303d; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.workspace-summary { margin-top: 7px; color: #738091; font-size: 11px; line-height: 1.4; }.lane-link { position: relative; min-width: 30px; }.lane-link::before { position: absolute; top: 50%; right: 0; left: 0; height: 1px; background: #cfd7df; content: ""; }.session-line { position: relative; display: flex; align-items: stretch; gap: 10px; min-width: 0; overflow-x: auto; padding: 4px 0; }.session-line::before { position: absolute; top: 50%; right: 0; left: 0; height: 1px; background: #e0e6eb; content: ""; }
+    .map-card { position: relative; z-index: 1; flex: 0 0 min(260px, 36%); min-width: 185px; min-height: 106px; padding: 11px 12px; border: 1px solid #dce3ea; border-radius: 8px; background: #fff; color: inherit; text-align: left; }.map-card:hover, .map-card.selected { border-color: #637181; box-shadow: 0 0 0 1px #637181 inset; }.map-card.attention { box-shadow: 0 0 0 1px #7e8997 inset; }.map-card.fork { border-style: dashed; }.card-head { display: flex; align-items: center; gap: 8px; }.card-title { min-width: 0; overflow: hidden; color: #27313e; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.badge { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 999px; background: #eef2f6; color: #5f6d7b; font-size: 10px; }.badge::before { width: 5px; height: 5px; border-radius: 50%; background: currentColor; content: ""; }.badge.running { background: #e8f1f9; color: #3e6889; }.badge.waiting { background: #fff2dc; color: #9a6a24; }.badge.failed { background: #fdebea; color: #9e4c47; }.card-preview { display: -webkit-box; min-height: 30px; margin-top: 9px; overflow: hidden; color: #728092; font-size: 11px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }.card-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 9px; color: #909aa7; font-size: 10px; }.fork-note { margin-top: 4px; overflow: hidden; color: #8b95a2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .empty { padding: 48px 18px; color: #85909f; text-align: center; font-size: 13px; }.legend { display: flex; justify-content: space-between; gap: 12px; margin: 11px 1px 0; color: #84909f; font-size: 11px; }.table { width: 100%; border-collapse: collapse; font-size: 12px; }.table th { padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid #e8edf1; color: #83909e; font-size: 10px; font-weight: 700; letter-spacing: .3px; text-align: left; }.table td { padding: 11px 14px; border-bottom: 1px solid #edf0f3; color: #687587; vertical-align: middle; }.table tr:last-child td { border-bottom: 0; }.table tr:hover td { background: #fafcfd; }.table button { padding: 0; border: 0; background: transparent; color: #2c3743; font-weight: 650; text-align: left; }.table-title { max-width: 390px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drawer-mask { position: fixed; z-index: 9; inset: 0; display: none; background: rgba(28, 36, 46, .16); }.drawer-mask.open { display: block; }.drawer { position: fixed; z-index: 10; top: 0; right: 0; bottom: 0; width: min(420px, 38vw); padding: 21px 22px 30px; overflow-y: auto; background: #fff; box-shadow: -12px 0 28px rgba(25, 36, 48, .13); transform: translateX(100%); transition: transform .18s ease-out; }.drawer.open { transform: translateX(0); }.drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-bottom: 17px; border-bottom: 1px solid #e7ebef; }.drawer-title { font-size: 15px; font-weight: 700; }.close { width: 29px; height: 29px; border: 0; border-radius: 6px; background: transparent; color: #667384; font-size: 18px; }.close:hover { background: #eef2f5; color: #1f2a36; }.detail-empty { padding-top: 20px; color: #84909f; font-size: 13px; line-height: 1.65; }.detail-session { margin-top: 19px; color: #222d39; font-size: 17px; line-height: 1.45; word-break: break-word; }.detail-row { margin-top: 19px; }.detail-label { color: #8995a3; font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }.detail-value { margin-top: 6px; color: #536172; font-size: 12px; line-height: 1.6; word-break: break-word; white-space: pre-wrap; }.detail-boundary { margin-top: 27px; padding-top: 17px; border-top: 1px solid #e9edf1; color: #85909f; font-size: 11px; line-height: 1.65; }
+    @media (max-width: 1160px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lane { grid-template-columns: 150px 22px minmax(0, 1fr); } .main { padding: 22px; } }
   </style>
 </head>
 <body>
-  <header class="topbar"><div class="brand"><span class="mark">M</span><span>Codex Maps</span></div><span class="mode">独立只读地图</span></header>
-  <div class="layout">
-    <aside class="filters">
-      <h2>筛选 Session</h2>
-      <div class="section"><input class="field" id="search" type="search" placeholder="搜索标题或预览"></div>
-      <div class="section"><h3>执行状态</h3><div class="choices" id="states"></div></div>
-      <div class="boundary">按工作目录分组，不把工作目录推断为 Codex 项目。当前版本不显示置顶、归档、Token、计划或子 Agent。</div>
-    </aside>
-    <main class="content">
-      <h1>Session 地图</h1><p class="sub">查看此独立数据源返回的 Session 快照。</p>
-      <div class="source"><span id="source">正在建立只读数据源</span><span class="revision" id="revision">—</span></div>
-      <div class="notice" id="notice">正在建立只读数据源，尚未显示会话。</div>
-      <section class="lanes" id="lanes"><div class="empty">正在加载快照…</div></section>
-    </main>
-    <aside class="detail"><h2>Session 详情</h2><div id="detail" class="detail-empty">选择一张 Session 卡片查看已确认的基础字段。</div></aside>
-  </div>
+  <header class="topbar"><div class="brand"><span class="mark">M</span><span>Codex Maps</span></div><nav class="topnav" aria-label="主导航"><button class="active" type="button">Session 地图</button><button type="button" disabled title="MVP 后开放">关系地图</button><button type="button" disabled title="MVP 后开放">项目管理</button></nav><div class="top-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">正在连接独立 Reader</span></div></header>
+  <div class="shell"><aside class="sidebar"><button class="side-item active" type="button"><span class="side-icon">⌘</span>Session 地图</button><div class="side-cap">执行状态</div><div id="status-filters"></div><div class="side-cap">工作区</div><div id="workspace-filters"></div><p class="side-note">当前数据源只确认工作目录，不将它推断为 Codex 项目。置顶、归档、项目图标与多根目录会在可验证的数据接口具备后接入。</p></aside>
+   <main class="main"><div class="crumb">Codex Maps / 独立只读地图</div><div class="head-row"><div><h1>Session 地图</h1><p class="sub">按工作区与状态组织 · SSE 实时更新</p></div><div class="view-switch" aria-label="视图切换"><button id="view-list" type="button">列表</button><button id="view-map" class="active" type="button">泳道地图</button></div></div><section class="metrics" id="metrics" aria-label="Session 概览"></section><section class="toolbar" aria-label="筛选工具栏"><input class="search" id="search" type="search" placeholder="搜索 Session 标题或预览"><div id="state-chips"></div><span class="toolbar-spacer"></span><button class="quiet-button" id="collapse-idle" type="button">折叠空闲节点</button></section><div class="connection-note" id="notice"><span>正在建立独立数据源，尚未显示会话。</span></div><section class="panel"><div class="panel-head"><span class="panel-title" id="panel-title">工作区泳道地图</span><span class="panel-sub" id="panel-subtitle">工作区是泳道 · Session 是节点 · Fork 以虚线节点标识</span><span class="panel-actions"><button class="quiet-button" id="toggle-workspaces" type="button">显示全部工作区</button><button class="quiet-button" id="clear-workspace" type="button" hidden>清除工作区筛选</button></span></div><div id="lanes"><div class="empty">正在加载快照…</div></div></section><footer class="legend" id="legend"><span>实线工作线＝同一工作区；虚线卡片＝已确认的 Fork；粗描边＝正在运行或等待</span><span id="result-count">—</span></footer></main></div>
+  <div class="drawer-mask" id="drawer-mask"></div><aside class="drawer" id="session-drawer" aria-hidden="true"><div class="drawer-head"><span class="drawer-title">Session 详情</span><button class="close" id="close-drawer" type="button" aria-label="关闭详情">×</button></div><div id="detail" class="detail-empty">选择泳道中的 Session 节点，即可查看此数据源已确认的基础字段。</div></aside>
   <script src="/assets/app.js${accessToken ? `?token=${encodeURIComponent(accessToken)}` : ""}"></script>
 </body>
 </html>`;

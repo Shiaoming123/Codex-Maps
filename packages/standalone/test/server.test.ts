@@ -79,7 +79,21 @@ describe("Standalone Map Reader HTTP boundary", () => {
       const response = await fetch(`${reader.url}/`);
 
       expect(response.status).toBe(200);
-      await expect(response.text()).resolves.toContain("Codex Maps · 独立只读地图");
+      await expect(response.text()).resolves.toContain("Codex Maps / 独立只读地图");
+    } finally {
+      await reader.close();
+    }
+  });
+
+  it("serves the map-first overview layout from the approved standalone flow", async () => {
+    const reader = await createTestReader(sourceFor(snapshot()));
+
+    try {
+      const page = await fetch(`${reader.url}/`).then((response) => response.text());
+
+      expect(page).toContain("工作区泳道地图");
+      expect(page).toContain('id="view-map"');
+      expect(page).toContain('id="session-drawer"');
     } finally {
       await reader.close();
     }

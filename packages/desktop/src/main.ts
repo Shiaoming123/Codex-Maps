@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import process from "node:process";
 
-import { app, BrowserWindow, session } from "electron";
+import { app, BrowserWindow, Menu, session } from "electron";
 
 import { startElectronDesktopApp } from "./electron-main.js";
 import { createDesktopMapShell } from "./desktop-map-shell.js";
@@ -25,6 +25,9 @@ async function start(): Promise<void> {
     platform: process.platform,
     createShell: async () => {
       app.setAppUserModelId("com.codexmaps.desktop");
+      if (process.platform !== "darwin") {
+        Menu.setApplicationMenu(null);
+      }
       session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => {
         callback(false);
       });
