@@ -162,16 +162,63 @@ interface CachedSession {
   session: SessionSummary | null;
 }
 
+interface CachedSessionIndex {
+  modifiedAtMs: number;
+  size: number;
+  titles: ReadonlyMap<string, string>;
+}
+
+async function loadSessionIndex(
+  path: string | undefined,
+  cache: CachedSessionIndex | null,
+): Promise<CachedSessionIndex | null> {
+  if (!path) return null;
+  let metadata;
+  try {
+    metadata = await stat(path);
+  } catch {
+    return null;
+  }
+  if (cache && cache.modifiedAtMs === metadata.mtimeMs && cache.size === metadata.size) {
+    return cache;
+  }
+  const titles = new Map<string, string>();
+  try {
+    for (const line of (await readFile(path, "utf8")).split(/\r?\n/)) {
+      try {
+        const entry = record(JSON.parse(line) as unknown);
+        const id = stringValue(entry?.id);
+        const title = stringValue(entry?.thread_name);
+        if (id && title) titles.set(id, title);
+      } catch {
+        continue;
+      }
+    }
+  } catch {
+    return null;
+  }
+  return { modifiedAtMs: metadata.mtimeMs, size: metadata.size, titles };
+}
+
 async function loadSessions(
   directory: string,
   cache: Map<string, CachedSession>,
+  sessionIndexPath: string | undefined,
+  sessionIndexCache: CachedSessionIndex | null,
 ): Promise<readonly SessionSummary[]> {
+  const currentIndex = await loadSessionIndex(sessionIndexPath, sessionIndexCache);
   const paths = await jsonlFiles(directory);
   const sessions = await Promise.all(paths.map(async (path) => {
     const metadata = await stat(path);
     const cached = cache.get(path);
     if (cached && cached.modifiedAtMs === metadata.mtimeMs && cached.size === metadata.size) {
-      return cached.session;
+      if (!cached.session) return null;
+      const title = currentIndex?.titles.get(cached.session.sessionId)
+        ?? `Session ${cached.session.sessionId.slice(0, 8)}`;
+      if (cached.session.title === title) return cached.session;
+      const refreshed = Object.freeze({ ...cached.session, title });
+      cache.set(path, { ...cached, session: refreshed });
+      return refreshed;
     }
     const projection = projectFilesystemCompatJsonl((await readFile(path, "utf8")).split(/\r?\n/));
     if (!projection.sessionId) {
@@ -182,7 +229,7 @@ async function loadSessions(
     const session: SessionSummary = {
       id: projection.sessionId,
       sessionId: projection.sessionId,
-      title: `Session ${projection.sessionId.slice(0, 8)}`,
+      title: currentIndex?.titles.get(projection.sessionId) ?? `Session ${projection.sessionId.slice(0, 8)}`,
       preview: "本地兼容模式：仅展示状态和元数据，不呈现对话正文。",
       cwd: projection.cwd ?? "(未提供工作目录)",
       createdAt: projection.createdAt ?? updatedAt,
@@ -219,6 +266,7 @@ export async function createFilesystemCompatSessionMapModule(
     throw new Error("refreshIntervalMs must be an integer of at least 250ms");
   }
   const cache = new Map<string, CachedSession>();
+  let sessionIndexCache: CachedSessionIndex | null = null;
   const source = new MutableSnapshotSource(Object.freeze({
     schemaVersion: 1,
     version: Object.freeze({ sourceId: options.sourceId, epoch: 1, revision: 1 }),
@@ -230,7 +278,9 @@ export async function createFilesystemCompatSessionMapModule(
     if (refreshing) return;
     refreshing = true;
     try {
-      const nextSessions = await loadSessions(options.sessionsDirectory, cache);
+      const nextIndex = await loadSessionIndex(options.sessionIndexPath, sessionIndexCache);
+      sessionIndexCache = nextIndex;
+      const nextSessions = await loadSessions(options.sessionsDirectory, cache, options.sessionIndexPath, sessionIndexCache);
       const previous = source.getSnapshot();
       if (sameSessions(previous.sessions, nextSessions) && previous.sync.phase === "ready") return;
       source.publish(Object.freeze({

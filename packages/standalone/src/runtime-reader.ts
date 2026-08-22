@@ -51,6 +51,7 @@ export function createFilesystemCompatRuntimeReader(
     createModule: async () =>
       createFilesystemCompatSessionMapModule({
         sessionsDirectory: options.sessionsDirectory ?? join(homedir(), ".codex", "sessions"),
+        sessionIndexPath: join(homedir(), ".codex", "session_index.jsonl"),
         sourceId: options.sourceId,
       }),
   });

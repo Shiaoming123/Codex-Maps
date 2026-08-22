@@ -131,4 +131,92 @@ describe("projectFilesystemCompatJsonl", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("uses a local session-index title and keeps the short-id fallback", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codex-maps-title-"));
+    const sessionIndexPath = join(directory, "session_index.jsonl");
+    await writeFile(
+      join(directory, "rollout-title.jsonl"),
+      '{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-title","cwd":"D:\\\\Project\\\\Example"}}',
+    );
+    await writeFile(
+      join(directory, "rollout-fallback.jsonl"),
+      '{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-fallback","cwd":"D:\\\\Project\\\\Example"}}',
+    );
+    await writeFile(
+      sessionIndexPath,
+      '{"id":"session-title","thread_name":"Synthetic Design Session","updated_at":"2026-08-22T10:00:00.000Z"}',
+    );
+    const module = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: directory,
+      sessionIndexPath,
+      sourceId: "filesystem-title-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const source = module.observe({ kind: "overview" });
+      await expect.poll(() => source.getSnapshot().sessions.find((session) => session.id === "session-title")?.title, { timeout: 1_000 })
+        .toBe("Synthetic Design Session");
+      expect(source.getSnapshot().sessions.find((session) => session.id === "session-fallback")?.title)
+        .toBe("Session session-");
+    } finally {
+      await module.dispose();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("indexes 500 synthetic sessions without dropping the complete snapshot", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "codex-maps-many-"));
+    await Promise.all(Array.from({ length: 500 }, (_, index) => writeFile(
+      join(directory, `rollout-${index}.jsonl`),
+      `{"type":"session_meta","timestamp":"2026-08-22T10:00:00.000Z","payload":{"session_id":"session-${index}","cwd":"D:\\\\Project\\\\Example"}}`,
+    )));
+    const module = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: directory,
+      sourceId: "filesystem-many-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const source = module.observe({ kind: "overview" });
+      await expect.poll(() => source.getSnapshot().sessions.length, { timeout: 3_000 })
+        .toBe(500);
+      expect(source.getSnapshot().sync).toEqual({ phase: "ready", stale: false });
+    } finally {
+      await module.dispose();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("distinguishes an empty directory from an unreadable directory", async () => {
+    const emptyDirectory = await mkdtemp(join(tmpdir(), "codex-maps-empty-"));
+    const unreadableDirectory = await mkdtemp(join(tmpdir(), "codex-maps-unreadable-"));
+    await rm(unreadableDirectory, { recursive: true, force: true });
+    const emptyModule = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: emptyDirectory,
+      sourceId: "filesystem-empty-test",
+      refreshIntervalMs: 250,
+    });
+    const unreadableModule = await createFilesystemCompatSessionMapModule({
+      sessionsDirectory: unreadableDirectory,
+      sourceId: "filesystem-unreadable-test",
+      refreshIntervalMs: 250,
+    });
+
+    try {
+      const emptySource = emptyModule.observe({ kind: "overview" });
+      const unreadableSource = unreadableModule.observe({ kind: "overview" });
+      await expect.poll(() => emptySource.getSnapshot().sync.phase, { timeout: 1_000 })
+        .toBe("ready");
+      await expect.poll(() => unreadableSource.getSnapshot().sync.phase, { timeout: 1_000 })
+        .toBe("stale");
+      expect(emptySource.getSnapshot().sessions).toHaveLength(0);
+      expect(unreadableSource.getSnapshot().sessions).toHaveLength(0);
+    } finally {
+      await emptyModule.dispose();
+      await unreadableModule.dispose();
+      await rm(emptyDirectory, { recursive: true, force: true });
+    }
+  });
 });

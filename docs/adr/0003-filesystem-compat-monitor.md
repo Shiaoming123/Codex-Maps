@@ -12,6 +12,7 @@
 新增一个用户本机运行的、只读的 `FilesystemCompatSessionMapModule`：首次索引后每秒扫描 `~/.codex/sessions` 的文件元数据，只重读大小或修改时间变化的 JSONL；忽略未知、损坏和正在追加的截断行，只投影以下字段到现有 `SessionMapModule.observe({ kind: "overview" })` seam：
 
 - session id、cwd、创建/最近活动时间；
+- 如果存在同目录上级的 `session_index.jsonl`，使用其中的 `thread_name` 作为本地显示标题；缺失时回退短 ID；
 - `running`、`completed`、`interrupted` 三类确定执行状态；
 - `token_count.info.total_token_usage` 的 token 数值和 `model_context_window`，缺失值保持 unknown；
 - 来源与 stale 状态。

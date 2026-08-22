@@ -78,11 +78,11 @@
 - Keep stable session IDs as identity; add a locally derived display label only when its source field is explicitly present.
 - Preserve cwd grouping and short-ID fallback when no safe title is available.
 
-- [ ] Write tests for explicit safe metadata labels and deterministic short-ID fallback.
-- [ ] Implement label selection without extracting arbitrary user message text.
-- [ ] Add loading, empty, stale, and 500+ session interaction checks for search/filter/list fallback.
-- [ ] Run the browser/page contract tests and a 500-fixture performance smoke.
-- [ ] Update the MVP issues record and commit `feat: improve session identity display`.
+- [x] Write tests for explicit safe metadata labels and deterministic short-ID fallback.
+- [x] Implement label selection without extracting arbitrary user message text.
+- [x] Add loading, empty, stale, and 500+ session interaction checks for search/filter/list fallback.
+- [x] Run the browser/page contract tests and a 500-fixture performance smoke.
+- [x] Update the MVP issues record and commit `feat: improve session identity display`.
 
 ### Task 4: Stabilize realtime freshness and reconnection behavior
 
@@ -165,4 +165,4 @@
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 1.
+- Current execution point: Task 4.

@@ -141,6 +141,7 @@ export interface FilesystemCompatProjection {
 
 export interface FilesystemCompatSessionMapModuleOptions {
   sessionsDirectory: string;
+  sessionIndexPath?: string;
   sourceId: string;
   refreshIntervalMs?: number;
 }
