@@ -92,6 +92,7 @@ function normalizeThread(thread: ProtocolThread): SessionSummary {
     executionState: executionState(thread),
     goalState: "unknown",
     forkedFromId: thread.forkedFromId,
+    parentThreadId: thread.parentThreadId ?? null,
     agentNickname: thread.agentNickname,
     agentRole: thread.agentRole,
   };

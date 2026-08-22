@@ -8,6 +8,7 @@ export interface ProtocolThread {
   id: string;
   sessionId: string;
   forkedFromId: string | null;
+  parentThreadId?: string | null;
   preview: string;
   createdAt: number;
   updatedAt: number;
@@ -46,6 +47,7 @@ export interface SessionSummary {
   executionState: ExecutionState;
   goalState: "unknown";
   forkedFromId: string | null;
+  parentThreadId: string | null;
   agentNickname: string | null;
   agentRole: string | null;
   tokenUsage?: TokenUsage | null;
@@ -78,6 +80,33 @@ export interface SessionMapSnapshot {
   version: SourceVersion;
   sync: SessionMapSync;
   sessions: readonly SessionSummary[];
+}
+
+export interface SessionRelationship {
+  source: "app-server";
+  kind: "fork" | "child-agent";
+  parentSessionId: string;
+  childSessionId: string;
+  confidence: "confirmed";
+}
+
+export interface SessionRelationshipGap {
+  source: "app-server";
+  kind: "fork" | "child-agent";
+  parentSessionId: string;
+  childSessionId: string;
+}
+
+export interface SessionRelationshipConflict {
+  source: "app-server";
+  childSessionId: string;
+  parentSessionIds: readonly string[];
+}
+
+export interface SessionRelationshipGraph {
+  relationships: SessionRelationship[];
+  unresolved: SessionRelationshipGap[];
+  conflicts: SessionRelationshipConflict[];
 }
 
 export interface SnapshotSource<T> {

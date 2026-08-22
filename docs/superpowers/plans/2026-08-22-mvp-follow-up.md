@@ -132,7 +132,10 @@
 **Files:**
 - Modify: `packages/session-map/src/types.ts`
 - Modify: `packages/session-map/src/module.ts`
+- Modify: `packages/session-map/src/relationships.ts`
 - Test: `packages/session-map/test/session-map.test.ts`
+- Test: `packages/session-map/test/relationships.test.ts`
+- Modify: `packages/standalone/src/server.ts`
 - Modify: `packages/standalone/src/page-client.ts`
 - Modify: `packages/standalone/src/page.ts`
 - Modify: `docs/decision-log.md`
@@ -141,10 +144,10 @@
 - Relationships carry `source`, `kind`, and confidence; missing parent/agent data renders list fallback rather than an inferred edge.
 - The first view is a bounded tree/branch detail, not an unrestricted force graph.
 
-- [ ] Add reducer tests for a confirmed fork, a child agent, missing parent, and conflicting relationship records.
-- [ ] Implement only fields present in the validated source contract.
-- [ ] Add the second-level relationship view and a clear unavailable state.
-- [ ] Run UI and source tests, then commit `feat: add evidence-backed relationship view`.
+- [x] Add reducer tests for a confirmed fork, a child agent, missing parent, and conflicting relationship records.
+- [x] Implement only fields present in the validated source contract.
+- [x] Add the second-level relationship view and a clear unavailable state.
+- [x] Run UI and source tests, then commit the evidence-backed relationship view.
 
 ### Task 7: Package and verify supported desktop targets
 
@@ -168,4 +171,4 @@
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 6; relationship fields remain source-gated and are not inferred when absent.
+- Current execution point: Task 7; relationship fields remain source-gated and are not inferred when absent.

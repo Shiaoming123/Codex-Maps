@@ -10,6 +10,7 @@ export {
   projectFilesystemCompatJsonl,
 } from "./filesystem-compat.js";
 export { StdioAppServerAdapter } from "./stdio.js";
+export { deriveSessionRelationships } from "./relationships.js";
 export type { StdioAppServerAdapterOptions } from "./stdio.js";
 export type {
   AppServerAdapter,
@@ -37,6 +38,10 @@ export type {
   SessionMapSync,
   SessionQuery,
   SessionSummary,
+  SessionRelationship,
+  SessionRelationshipConflict,
+  SessionRelationshipGap,
+  SessionRelationshipGraph,
   SnapshotSource,
   SourceVersion,
   TokenUsage,

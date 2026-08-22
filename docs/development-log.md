@@ -302,3 +302,16 @@ pnpm start:desktop (token hardening rerun)
 ### 影响
 
 后续 UI 和 mutation 入口必须以该 capability 集合为门禁；缺少来源能力时保持禁用或解释性降级，不能把“接口存在”当作“当前宿主可用”。
+
+## 2026-08-22 — 有证据的关系地图纵向切片
+
+### 已完成
+
+- App Server 线程模型补充可选 `parentThreadId`，与已有 `forkedFromId`、Agent 昵称/角色一起进入共享 Session 摘要；filesystem-compat 明确填充为空值。
+- 新增纯函数关系 reducer：已知父节点生成 `confirmed` Fork / child-agent 边；缺失父节点进入 unresolved；冲突父记录不生成边。
+- Standalone HTTP/SSE envelope 统一返回关系图；页面新增二级“关系地图”，只显示当前选中 Session 的父节点和直接派生节点。
+- capability 缺失时页面显示“当前数据源未提供关系字段”，不会根据标题、时间或摘要补边。
+
+### 验证
+
+4 个关系 reducer 合成测试覆盖 Fork、子 Agent、缺失父节点和冲突记录；App Server 归一化测试覆盖 parent/Agent 字段；Standalone 页面合约覆盖关系入口和降级文案。测试不使用真实 Session 内容。

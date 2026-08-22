@@ -143,3 +143,11 @@
 原因：本机验证到持久事件流含 `task_started`、`task_complete`、`turn_aborted` 和 `token_count`，能够支持核心的实时状态可视化；私有 IPC 仍不可作为公开产品依赖。
 
 约束：禁止写入文件、提取/展示正文、上传 transcript、将该能力称为官方 API 或 Desktop 共享连接。schema 不兼容、目录异常或升级后无法解析时，保留最后完整快照并标 stale。完整合同见 ADR 0003。
+
+## 2026-08-22 — 关系视图只消费已确认的来源字段
+
+决定：关系地图使用 `forkedFromId` 和 `parentThreadId` 生成有限的 Fork / 子 Agent 边；每条已绘制边都带有 `source`、`kind` 和 `confidence`。父节点缺失时保留未解析记录，父关系互相冲突时隐藏相关边并提示等待新快照。
+
+原因：关系可视化的价值在于解释“从哪里分支”，而不是让布局看起来完整。标题、工作目录、更新时间和摘要都不是父子关系证据，因此不能作为推断依据。
+
+影响：App Server Reader 的 HTTP/SSE envelope 现在包含关系图数据；独立页面提供二级“关系地图”视图。filesystem-compat 没有关系能力，仍显示明确的不可用降级。当前实现是根节点 + 直接父/子分支的有界视图，不引入自由力导向图或关系编辑。

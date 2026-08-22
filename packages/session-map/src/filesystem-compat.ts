@@ -237,6 +237,7 @@ async function loadSessions(
       executionState: projection.executionState,
       goalState: "unknown" as const,
       forkedFromId: null,
+      parentThreadId: null,
       agentNickname: null,
       agentRole: null,
       tokenUsage: projection.tokenUsage,

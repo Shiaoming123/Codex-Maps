@@ -1,6 +1,7 @@
 import { createServer, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 
+import { deriveSessionRelationships } from "../../session-map/src/relationships.js";
 import type { SessionMapModule, SessionMapSnapshot } from "../../session-map/src/types.js";
 import { standaloneClientScript } from "./page-client.js";
 import { standalonePage } from "./page.js";
@@ -55,6 +56,7 @@ function snapshotEnvelope(snapshot: SessionMapSnapshot, source: StandaloneMapRea
   return {
     source,
     snapshot,
+    relationships: deriveSessionRelationships(snapshot.sessions),
   };
 }
 

@@ -72,6 +72,11 @@ describe("Standalone Map Reader HTTP boundary", () => {
             "session.relationship.read",
           ],
         },
+        relationships: {
+          relationships: [],
+          unresolved: [],
+          conflicts: [],
+        },
         snapshot: snapshot(),
       });
     } finally {
@@ -142,6 +147,7 @@ describe("Standalone Map Reader HTTP boundary", () => {
 
       expect(page).toContain("工作区泳道地图");
       expect(page).toContain('id="view-map"');
+      expect(page).toContain('id="view-relationship"');
       expect(page).toContain('id="session-drawer"');
     } finally {
       await reader.close();
@@ -170,6 +176,20 @@ describe("Standalone Map Reader HTTP boundary", () => {
       expect(script).toContain("Token 用量");
       expect(script).toContain("上下文窗口");
       expect(script).toContain("未提供");
+    } finally {
+      await reader.close();
+    }
+  });
+
+  it("serves the evidence-backed relationship view and its unavailable fallback", async () => {
+    const reader = await createTestReader(sourceFor(snapshot()));
+
+    try {
+      const script = await fetch(`${reader.url}/assets/app.js`).then((response) => response.text());
+
+      expect(script).toContain("Session 关系地图");
+      expect(script).toContain("当前数据源未提供可验证的 Fork / 子 Agent 关系字段");
+      expect(script).toContain("检测到互相冲突的父关系记录");
     } finally {
       await reader.close();
     }

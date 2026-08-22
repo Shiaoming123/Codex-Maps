@@ -7,6 +7,7 @@ const thread = (id: string, updatedAt: number) => ({
   id,
   sessionId: `session-${id}`,
   forkedFromId: null,
+  parentThreadId: null,
   preview: `Preview ${id}`,
   ephemeral: false,
   modelProvider: "openai",
@@ -103,6 +104,51 @@ describe("SessionMapModule overview snapshot", () => {
         },
       },
     ]);
+
+    await module.dispose();
+  });
+
+  it("preserves validated parent and Agent metadata for the relationship view", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [
+            thread("root", 30),
+            {
+              ...thread("agent", 20),
+              parentThreadId: "root",
+              agentNickname: "Atlas",
+              agentRole: "research",
+            },
+          ],
+          nextCursor: null,
+        },
+      ],
+    });
+
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+
+    const agent = module.observe({ kind: "overview" }).getSnapshot().sessions.find((session) => session.id === "agent");
+    expect(agent).toMatchObject({
+      parentThreadId: "root",
+      agentNickname: "Atlas",
+      agentRole: "research",
+    });
 
     await module.dispose();
   });
