@@ -271,3 +271,15 @@ pnpm start:desktop (token hardening rerun)
 - 首次索引会读取历史 JSONL；后续每秒只检查文件元数据并重读变化文件。本机 1,454 个 session 的两个刷新窗口 CPU 约 16ms；目录 watcher/真正的尾随解析留待跨平台性能证据出现后再决定。
 - Token 事件尚未投影数值；完成百分比、标题、Fork、项目/Section、子 Agent 和写操作仍没有足够的稳定来源。
 - macOS/Linux 需要实机验证 session 路径和追加行为；当前只宣称 Windows 本机 smoke。
+
+## 2026-08-22 — Windows 快速启动入口
+
+### 决定
+
+在尚未进入安装器/签名阶段前，提供受版本控制的 `start-codex-maps.vbs` 和 `shortcut:windows` 安装脚本；它们创建用户桌面的 `Codex Maps.lnk`，通过隐藏的 Windows Script Host 启动已有 `pnpm start:desktop` 流程。
+
+### 边界
+
+- 快捷方式只启动本仓库的源码开发壳，不修改 Codex Desktop、系统安装目录或注册表。
+- 首次或源码变更后仍会构建 TypeScript；未提供后台更新、开机启动、安装/卸载或代码签名。
+- 已存在同名快捷方式时，脚本默认拒绝覆盖，必须显式 `-Force`。

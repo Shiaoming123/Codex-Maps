@@ -38,15 +38,19 @@
 
 验收：搜索、分页、项目/cwd、置顶、归档、状态筛选可用；详情显示计划、最近输出摘录、Token/上下文和派生数量；至少 500 个 Session 下仍可操作。
 
-当前进展：已实现 localhost 独立只读 Map Reader：根页面提供标题/预览搜索、执行状态筛选、按 `cwd`（不称为项目）分组和基础详情；`GET /api/snapshot` 返回完整快照，`GET /api/events` 用 SSE 推送后续完整 revision。页面明确标明该源由 Codex Maps 自己持有、未与 Desktop 共享；无原生跳转、写操作、项目/置顶、Token、计划或子 Agent 字段。
+当前进展：已实现 localhost 独立只读 Map Reader：根页面提供搜索、执行状态筛选、按 `cwd`（不称为项目）分组和基础详情；`GET /api/snapshot` 返回完整快照，`GET /api/events` 用 SSE 推送后续完整 revision。默认的本机 JSONL 兼容源可观察当前 Desktop 写入的 `running`、`completed`、`interrupted` 状态；页面明确标记它不是共享 Desktop 连接。无原生跳转、写操作、项目/置顶、Token、计划或子 Agent 字段。
 
-当前缺口：分页、可靠项目/Section、置顶与归档、`thread/read` 的详情合同、500 Session 性能、以及共享 Host Bridge UI 都尚未完成。
+当前缺口：分页、可靠项目/Section、置顶与归档、可读标题、Token/计划详情、Fork/子 Agent 关系、以及共享 Host Bridge UI 都尚未完成。
 
 ### CM-005 实时可观察性
 
-状态：`doing / execution-status-foundation`
+状态：`doing / filesystem-compat-monitor-done`
 
 验收：running、waiting、idle、failed 与 goal 状态在两个窗口一致；事件到 UI 的本机 P95 目标小于 1 秒；断线、重连和数据陈旧有可见提示。
+
+当前进展：Windows 本机 JSONL 兼容模式已通过真实只读 smoke；以 1 秒间隔检查变化文件，状态事件映射为 running/completed/interrupted，读取失败会保留最后完整快照并标 stale。首次历史索引后，1,454 个 session 的两个刷新窗口 CPU 约 16ms。
+
+当前缺口：尚未测得端到端 P95；`waiting`、`idle`、`failed`、goal/plan、token 数值与跨窗口一致性没有稳定的当前 Desktop 来源。macOS/Linux 的文件路径与追加行为也未做实机验收。
 
 ### CM-006 安全管理操作
 
@@ -94,7 +98,7 @@
 
 状态：`doing / source-dev-shell-done`
 
-当前进展：Electron main process 复用 `createRuntimeReader`，将其唯一 localhost 页面加载进 sandboxed BrowserWindow；拒绝权限请求、外部导航与新窗口。已覆盖单实例、Windows 最后窗口关闭前释放 Reader，以及重复窗口请求聚焦。`pnpm start:desktop` 用于源码开发启动。
+当前进展：Electron main process 复用 Reader，将其唯一 localhost 页面加载进 sandboxed BrowserWindow；拒绝权限请求、外部导航与新窗口。已覆盖单实例、Windows 最后窗口关闭前释放 Reader，以及重复窗口请求聚焦。`pnpm start:desktop` 用于源码开发启动；Windows 用户可运行 `pnpm shortcut:windows` 创建无终端的桌面快捷方式。
 
 当前缺口：Windows 安装/卸载 smoke、macOS Apple Silicon 真实启动、Codex 可执行文件发现 adapter、安装器、签名/notarization 与自动更新尚未进入实现，因此不能称为可分发桌面应用。
 
