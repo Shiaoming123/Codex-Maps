@@ -7,8 +7,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start:desktop": "pnpm build && electron build/desktop/src/main.js",
+    "smoke:standalone": "pnpm build && node scripts/smoke-standalone.mjs",
     "start:standalone": "pnpm build && node build/standalone/src/main.js",
     "shortcut:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-windows-shortcut.ps1",
+    "shortcut:windows:remove": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/uninstall-windows-shortcut.ps1",
     "test": "vitest run",
     "test:python": "python -m unittest discover -s tests",
     "test:smoke:app-server": "vitest run packages/session-map/test/real-app-server.smoke.test.ts",

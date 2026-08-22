@@ -287,6 +287,17 @@ pnpm start:desktop (token hardening rerun)
 - 首次或源码变更后仍会构建 TypeScript；未提供后台更新、开机启动、安装/卸载或代码签名。
 - 已存在同名快捷方式时，脚本默认拒绝覆盖，必须显式 `-Force`。
 
+## 2026-08-22 — 桌面交付 smoke 与快捷方式生命周期
+
+### 已完成
+
+- 新增 `pnpm smoke:standalone`：构建 Reader，使用临时合成 Session 目录启动 localhost 服务，验证 ready 快照、只读来源、关系降级 envelope，并等待进程关闭。
+- 新增 `shortcut:windows:remove` 和卸载脚本；在临时快捷方式路径验证创建、重复创建拒绝、`-Force` 迁移和移除。
+
+### 当前发布状态
+
+Windows 源码开发启动入口可重复验证；正式安装器、安装/卸载产品流程、代码签名、自动更新、macOS Apple Silicon 真机 smoke 和 release provenance 仍未完成，不能称为正式分发版本。
+
 ## 2026-08-22 — Reader 能力契约门禁
 
 ### 决定

@@ -155,6 +155,9 @@
 - Modify: `packages/desktop/src/main.ts`
 - Create/Modify: packaging configuration under `packages/desktop/`
 - Test: `packages/desktop/test/`
+- Modify: `package.json`
+- Create: `scripts/smoke-standalone.mjs`
+- Create: `scripts/uninstall-windows-shortcut.ps1`
 - Modify: `docs/desktop-delivery-plan.md`
 - Modify: `docs/issues.md`
 
@@ -162,13 +165,13 @@
 - Windows x64 is the first release target; macOS Apple Silicon is the next smoke target; Linux/WSL remain explicit compatibility matrices.
 - Native Host Gate remains separate from standalone packaging and cannot be marked complete by an Electron window alone.
 
-- [ ] Add deterministic build/start/close smoke for the supported target.
-- [ ] Add installation/uninstallation and shortcut migration checks before any signed release claim.
-- [ ] Verify no Codex installation path is modified and no session content enters artifacts.
+- [x] Add deterministic build/start/close smoke for the standalone supported target.
+- [x] Add source-development shortcut create/remove and migration checks; full app installer remains a release gate.
+- [x] Verify the smoke uses only a temporary synthetic Session directory and does not modify a Codex installation path.
 - [ ] Record release provenance and commit only after artifact and live startup checks pass.
 
 ## Plan Review
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 7; relationship fields remain source-gated and are not inferred when absent.
+- Current execution point: Task 7; standalone smoke is complete, while installer/signing/macOS release gates remain pending.

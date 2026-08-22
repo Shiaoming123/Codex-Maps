@@ -23,7 +23,24 @@ pnpm start:desktop
 
 `CODEX_MAPS_CODEX_PATH` 是可选覆盖；未设置时使用 PATH 中的 `codex`。如默认端口已被另一个 Reader 占用，可设置 `CODEX_MAPS_PORT` 为 1024–65535 的空闲端口。
 
+源码阶段的 Windows 快捷方式可以创建和移除：
+
+```powershell
+pnpm shortcut:windows
+pnpm shortcut:windows:remove
+```
+
+创建脚本默认不覆盖既有同名快捷方式；迁移或修复时可对安装脚本显式传入 `-Force` 和 `-ShortcutPath`。这只是源码启动入口，不是安装器、卸载器或签名发布物。
+
 当前验收仅包括：源码构建、Electron 主窗口、单实例聚焦、Reader 生命周期与安全窗口配置。Windows 关闭最后一个窗口会先关闭 Reader 再退出；macOS 关闭最后一个窗口保留应用，退出应用时释放 Reader。
+
+可重复的独立 Reader 交付 smoke：
+
+```powershell
+pnpm smoke:standalone
+```
+
+该命令用临时合成 Session 目录启动已构建的 Reader，验证 localhost snapshot、只读来源、ready 状态、关系降级 envelope 和进程关闭，然后删除自己创建的临时目录。它是跨平台核心启动 smoke，不等同于已完成 Electron 安装器或签名验收。
 
 ## 诚实的能力边界
 
