@@ -120,9 +120,9 @@
 - `thread/read`, project/Section fields, precise navigation, and mutations require a source capability and an evidence-backed adapter.
 
 - [ ] Add capability tests for unavailable project, navigation, pin, archive, delete, and title sources.
-- [ ] Keep compatibility mode read-only and make unsupported controls explain the missing source rather than silently failing.
+- [x] Keep compatibility mode read-only and make unsupported controls explain the missing source rather than silently failing.
 - [ ] Run contract tests against synthetic generated-contract fixtures; do not use real session content.
-- [ ] Update the capability matrix and commit `chore: tighten unsupported capability gates`.
+- [x] Update the capability matrix and commit `chore: tighten unsupported capability gates`.
 
 ### Task 6: Build the relationship-map vertical slice when source evidence exists
 

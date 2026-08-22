@@ -21,6 +21,23 @@ Desktop 稳定合同包含 `thread/delete`、`threadSection/*`、`thread/section
 - **实验**：官方标注为 experimental，或本项目决定在不同 Codex 版本上先做能力探测、再开放的能力。
 - **壳层私有**：Codex Desktop 自身可以做到，但没有公开 App Server 合同；不能假定 Windows、macOS、Linux 或不同 Desktop 版本实现一致。
 
+## Codex Maps 当前本机兼容源
+
+下面是当前默认 `filesystem-compat` 源的实际能力，不是上游 App Server 合同的承诺：
+
+| 能力 | 当前状态 | UI 行为 |
+| --- | --- | --- |
+| 读取 Session 元数据 | 可用 | 展示 session id、cwd、标题索引、创建/最近活动时间 |
+| 运行状态 | 可用 | 展示 running、completed、interrupted；未知事件保持 unknown |
+| Token / 上下文 | 可用但字段可缺失 | 展示已验证数值；缺失显示“未提供”，不转成 0 |
+| 结构化计划 / goal | 不可用 | 不显示完成百分比，不把一次 turn 完成当作目标完成 |
+| 项目、Section、置顶 | 不可用 | 只按 cwd 本地分组，并显示兼容模式边界 |
+| rename、archive、unarchive、delete | 不可用 | 不显示写操作入口，不修改 JSONL/SQLite |
+| 在 Codex Desktop 中打开 | 不可用 | 只保留 Maps 自己的详情，不猜测宿主导航 |
+| Fork / 子 Agent 关系 | 当前源不提供 | 没有来源字段时不绘制关系边 |
+
+只有在 `AppServerAdapter` 或经过验证的 `HostBridgeAdapter` 提供 capability、权威回执和重读确认后，表中的“不可用”能力才可以进入 UI；文件兼容源永远不承担这些写操作。
+
 ## 能力矩阵
 
 | 用户诉求 | 官方方法 / 事件 | 稳定性 | MVP 决策 | 降级方案 |
