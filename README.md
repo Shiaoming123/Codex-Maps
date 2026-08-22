@@ -4,7 +4,7 @@
 
 Codex Maps 计划提供同一套 Session 地图的两种形态：Codex 左侧入口打开的内嵌页，以及适合放在副屏持续观察的独立窗口。两者必须共享同一个实时 Session Store，避免状态延迟、冲突或重复写入。
 
-当前状态：`0.1.0 foundation / core GO / native host blocked`。仓库已经完成命名、产品边界、MVP 架构与 PC 页面流，并落地 App Server 只读切片和 Host Bridge 合同切片。**产品核心可以继续实现；当前 Codex Desktop 没有公开 native route/window 挂载合同，所以本版本不是原生左侧插件，也不会修改签名安装包来伪装实现。**
+当前状态：`0.1.0 foundation / core GO / native host blocked`。仓库已经完成命名、产品边界、MVP 架构与 PC 页面流，并落地 App Server 单 reader pump、实时状态通知、断线 stale 快照和 Host Bridge 合同切片。**产品核心正在形成真实的长期连接能力；当前 Codex Desktop 没有公开 native route/window 挂载合同，所以本版本不是原生左侧插件，也不会修改签名安装包来伪装实现。**
 
 ## MVP 要解决什么
 

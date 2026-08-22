@@ -91,3 +91,33 @@ Python 协议基线将在最终 checkpoint 与 TypeScript 验证一起重跑。�
 2. CM-003：实现实时快照 Store、stale/reconcile 与双轴状态 reducer。
 3. CM-004：把现有项目泳道/二级关系原型接入 fixture，先交付 Map Reader。
 4. Host Integration Gate：只在官方 API 或受支持 loader 出现时恢复，不重复逆向当前 ASAR。
+
+## 2026-08-22 — CM-002 单 reader pump 纵向切片
+
+### 本轮目标
+
+证明独立模式能够可靠消费长期 App Server 连接，而不是只完成一次 `thread/list` 后丢失实时事件。
+
+### 已完成
+
+- 以既有 `SessionMapModule.observe() -> SnapshotSource` 为公共测试 seam，把静态 source 升级为 React-safe 的原子快照提交。
+- 将每个 request 自行读取 iterator 改为单 reader pump；pending response、notification 和 server request 由一个输入消费者分发。
+- 支持 `thread/status/changed`：已知 Session 的 execution state 更新并发布 `revision + 1`；初始化分页期间到达的通知先缓冲，完整列表建立后再提交。
+- 未知 thread id 不创建残缺 Session，也不产生虚假 revision。
+- malformed status notification 不覆盖已有状态，也不会因 reducer 抛错而误判 transport 断线；未知 active flag 作为字符串保留，不把协议扩展变成解析崩溃。
+- 意外 transport EOF 保留最后完整 sessions，发布 `sync=disconnected/stale:true`；显式 module dispose 不伪装成意外断线。
+- 未支持的 App Server request 使用原始 ID 返回 JSON-RPC `-32601`，不会静默吞掉或自动批准。
+
+### TDD 证据
+
+每个行为均先得到失败测试，再做最小实现：缺少通知入口、初始化期通知被丢失、断线无状态、server request 被吞和未知 thread 产生虚假 revision，均分别经历 red → green。
+
+### 仍未完成
+
+- request timeout、orphan/duplicate response 诊断和逆序并发 response 合同。
+- 单 writer queue 与写失败语义。
+- notification sink 隔离、协议 classifier 的全部非法 envelope 测试。
+- 自动重新 acquire、重新握手、全量校正和 epoch 推进。
+- `thread/read`、goal、plan、token 与 turn reducers。
+
+因此 CM-002 状态是 `single-reader-foundation-done`，不是 production complete。下一条最小切片应抽出可公开测试的 App Server client seam，先完成“两个并发 request、逆序 response 仍各自正确完成”和 request timeout。

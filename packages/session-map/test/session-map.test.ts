@@ -106,4 +106,264 @@ describe("SessionMapModule overview snapshot", () => {
 
     await module.dispose();
   });
+
+  it("publishes a new revision when a thread status notification arrives", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [thread("a", 30)],
+          nextCursor: null,
+        },
+      ],
+    });
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+    const source = module.observe({ kind: "overview" });
+    let notifications = 0;
+    const unsubscribe = source.subscribe(() => {
+      notifications += 1;
+    });
+
+    adapter.emitNotification("thread/status/changed", {
+      threadId: "a",
+      status: { type: "active", activeFlags: [] },
+    });
+
+    await expect
+      .poll(() => source.getSnapshot().sessions[0]?.executionState, { timeout: 250 })
+      .toBe("running");
+    expect(source.getSnapshot().version.revision).toBe(2);
+    expect(notifications).toBe(1);
+
+    unsubscribe();
+    await module.dispose();
+  });
+
+  it("keeps a status notification that arrives before the list response", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [thread("a", 30)],
+          nextCursor: null,
+          notificationsBeforeResponse: [
+            {
+              method: "thread/status/changed",
+              params: {
+                threadId: "a",
+                status: { type: "active", activeFlags: ["waitingOnUserInput"] },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+    const snapshot = module.observe({ kind: "overview" }).getSnapshot();
+
+    expect(snapshot.sessions[0]?.executionState).toBe("waiting");
+    expect(snapshot.version.revision).toBe(2);
+
+    await module.dispose();
+  });
+
+  it("preserves the last complete snapshot as stale when the transport disconnects", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [thread("a", 30)],
+          nextCursor: null,
+        },
+      ],
+    });
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+    const source = module.observe({ kind: "overview" });
+    const completeSnapshot = source.getSnapshot();
+
+    adapter.disconnect();
+
+    await expect.poll(() => source.getSnapshot().sync.phase, { timeout: 250 }).toBe("disconnected");
+    const staleSnapshot = source.getSnapshot();
+    expect(staleSnapshot.sync).toEqual({
+      phase: "disconnected",
+      stale: true,
+      reason: "transport-closed",
+    });
+    expect(staleSnapshot.sessions).toBe(completeSnapshot.sessions);
+    expect(staleSnapshot.version.revision).toBe(2);
+
+    await module.dispose();
+  });
+
+  it("rejects an unsupported App Server request instead of swallowing it", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [],
+          nextCursor: null,
+        },
+      ],
+    });
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+
+    adapter.emitServerRequest(91, "item/commandExecution/requestApproval", {
+      threadId: "thread-a",
+    });
+
+    await expect
+      .poll(
+        () => adapter.sent.find((message) => message.id === 91 && message.error !== undefined),
+        { timeout: 250 },
+      )
+      .toEqual({
+        id: 91,
+        error: {
+          code: -32601,
+          message: "unsupported server request: item/commandExecution/requestApproval",
+        },
+      });
+
+    await module.dispose();
+  });
+
+  it("does not create or publish a partial Session for an unknown notification id", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [thread("a", 30)],
+          nextCursor: null,
+          notificationsBeforeResponse: [
+            {
+              method: "thread/status/changed",
+              params: {
+                threadId: "unknown-thread",
+                status: { type: "active", activeFlags: [] },
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+    const snapshot = module.observe({ kind: "overview" }).getSnapshot();
+
+    expect(snapshot.sessions.map((session) => session.id)).toEqual(["a"]);
+    expect(snapshot.version.revision).toBe(1);
+
+    await module.dispose();
+  });
+
+  it("ignores a malformed status notification without disconnecting the reader", async () => {
+    const adapter = new MemoryAppServerAdapter({
+      initializeResult: {
+        userAgent: "codex-test",
+        codexHome: "C:\\CodexHome",
+        platformFamily: "windows",
+        platformOs: "windows",
+      },
+      threadPages: [
+        {
+          cursor: null,
+          data: [thread("a", 30)],
+          nextCursor: null,
+        },
+      ],
+    });
+    const module = await createSessionMapModule({
+      adapter,
+      sourceId: "source-test",
+      clientInfo: {
+        name: "codex_maps",
+        title: "Codex Maps",
+        version: "0.1.0",
+      },
+    });
+    const source = module.observe({ kind: "overview" });
+
+    adapter.emitNotification("thread/status/changed", {
+      threadId: "a",
+      status: { type: "active" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(source.getSnapshot().sync).toEqual({ phase: "ready", stale: false });
+    expect(source.getSnapshot().version.revision).toBe(1);
+
+    await module.dispose();
+  });
 });

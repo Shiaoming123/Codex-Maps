@@ -20,6 +20,7 @@ interface MemoryThreadPage {
   cursor: string | null;
   data: ProtocolThread[];
   nextCursor: string | null;
+  notificationsBeforeResponse?: Array<{ method: string; params: unknown }>;
 }
 
 export interface MemoryAppServerScenario {
@@ -29,8 +30,9 @@ export interface MemoryAppServerScenario {
 
 interface SentMessage {
   id?: number;
-  method: string;
-  params: unknown;
+  method?: string;
+  params?: unknown;
+  error?: { code: number; message: string };
 }
 
 class AsyncLineQueue implements AsyncIterable<string> {
@@ -74,6 +76,7 @@ export class MemoryAppServerAdapter implements AppServerAdapter {
   readonly sent: SentMessage[] = [];
   readonly #scenario: MemoryAppServerScenario;
   #acquired = false;
+  #queue: AsyncLineQueue | null = null;
 
   constructor(scenario: MemoryAppServerScenario) {
     this.#scenario = scenario;
@@ -85,6 +88,7 @@ export class MemoryAppServerAdapter implements AppServerAdapter {
     }
     this.#acquired = true;
     const queue = new AsyncLineQueue();
+    this.#queue = queue;
 
     return {
       lines: queue,
@@ -108,6 +112,9 @@ export class MemoryAppServerAdapter implements AppServerAdapter {
             );
             return;
           }
+          for (const notification of page.notificationsBeforeResponse ?? []) {
+            queue.push(JSON.stringify(notification));
+          }
           queue.push(
             JSON.stringify({
               id: message.id,
@@ -122,9 +129,31 @@ export class MemoryAppServerAdapter implements AppServerAdapter {
       },
       release: async () => {
         queue.close();
+        this.#queue = null;
         this.#acquired = false;
       },
     };
+  }
+
+  emitNotification(method: string, params: unknown): void {
+    if (!this.#queue) {
+      throw new Error("MemoryAppServerAdapter has no active owner");
+    }
+    this.#queue.push(JSON.stringify({ method, params }));
+  }
+
+  emitServerRequest(id: number, method: string, params: unknown): void {
+    if (!this.#queue) {
+      throw new Error("MemoryAppServerAdapter has no active owner");
+    }
+    this.#queue.push(JSON.stringify({ id, method, params }));
+  }
+
+  disconnect(): void {
+    if (!this.#queue) {
+      throw new Error("MemoryAppServerAdapter has no active owner");
+    }
+    this.#queue.close();
   }
 }
 

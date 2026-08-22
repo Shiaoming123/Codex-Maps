@@ -17,7 +17,7 @@ export interface ProtocolThread {
     | { type: "systemError" }
     | {
         type: "active";
-        activeFlags: Array<"waitingOnApproval" | "waitingOnUserInput">;
+        activeFlags: string[];
       };
   cwd: string;
   agentNickname: string | null;
@@ -49,10 +49,15 @@ export interface SourceVersion {
   revision: number;
 }
 
+export type SessionMapSync =
+  | { phase: "ready"; stale: false }
+  | { phase: "stale"; stale: true }
+  | { phase: "disconnected"; stale: true; reason: "transport-closed" };
+
 export interface SessionMapSnapshot {
   schemaVersion: 1;
   version: SourceVersion;
-  sync: { phase: "ready"; stale: false };
+  sync: SessionMapSync;
   sessions: readonly SessionSummary[];
 }
 

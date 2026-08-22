@@ -19,6 +19,7 @@ export type {
   SessionMapModule,
   SessionMapModuleOptions,
   SessionMapSnapshot,
+  SessionMapSync,
   SessionQuery,
   SessionSummary,
   SnapshotSource,
