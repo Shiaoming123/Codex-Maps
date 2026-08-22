@@ -1,0 +1,27 @@
+{
+  "name": "codex-session-organizer",
+  "version": "0.1.0",
+  "description": "A personal, local-first visual organizer for Codex threads.",
+  "author": {
+    "name": "Shiaoming123",
+    "url": "https://github.com/Shiaoming123"
+  },
+  "repository": "https://github.com/Shiaoming123/codex-session-organizer",
+  "license": "MIT",
+  "keywords": ["codex", "sessions", "threads", "productivity", "windows"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Codex Session Organizer",
+    "shortDescription": "Search and organize your Codex sessions.",
+    "longDescription": "A personal local-first organizer for searching, grouping, and safely managing Codex sessions through codex app-server.",
+    "developerName": "Shiaoming123",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read"],
+    "defaultPrompt": [
+      "Show my recent Codex sessions.",
+      "Find sessions for this project.",
+      "Help me organize completed sessions."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
