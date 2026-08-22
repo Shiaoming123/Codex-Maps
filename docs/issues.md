@@ -88,6 +88,14 @@
 
 当前进展：`scripts/probe-active-codex.ps1` 已从唯一 active Desktop App Server 解析 executable，校验复制 hash，生成稳定/experimental 合同并输出去敏 JSON。剩余缺口是把方法/字段解析提取为纯函数 fixture 测试，并覆盖零个/多个 active owner 和合同生成失败。
 
+### CM-012 Electron 独立桌面壳
+
+状态：`doing / source-dev-shell-done`
+
+当前进展：Electron main process 复用 `createRuntimeReader`，将其唯一 localhost 页面加载进 sandboxed BrowserWindow；拒绝权限请求、外部导航与新窗口。已覆盖单实例、Windows 最后窗口关闭前释放 Reader，以及重复窗口请求聚焦。`pnpm start:desktop` 用于源码开发启动。
+
+当前缺口：Windows 安装/卸载 smoke、macOS Apple Silicon 真实启动、Codex 可执行文件发现 adapter、安装器、签名/notarization 与自动更新尚未进入实现，因此不能称为可分发桌面应用。
+
 ## P1 — 项目管理与跨平台
 
 ### CM-101 项目/Section 读取展示

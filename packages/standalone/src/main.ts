@@ -1,7 +1,6 @@
 import process from "node:process";
 
-import { createSessionMapModule, StdioAppServerAdapter } from "../../session-map/src/index.js";
-import { createStandaloneMapReader } from "./server.js";
+import { createRuntimeReader } from "./runtime-reader.js";
 
 function portFromEnvironment(): number {
   const raw = process.env.CODEX_MAPS_PORT;
@@ -17,19 +16,10 @@ function portFromEnvironment(): number {
 
 async function main(): Promise<void> {
   const command = process.env.CODEX_MAPS_CODEX_PATH ?? "codex";
-  const reader = await createStandaloneMapReader({
-    host: "127.0.0.1",
+  const reader = await createRuntimeReader({
+    command,
     port: portFromEnvironment(),
-    createModule: async () =>
-      createSessionMapModule({
-        adapter: new StdioAppServerAdapter({ command, args: ["app-server"] }),
-        sourceId: `standalone-${process.pid}`,
-        clientInfo: {
-          name: "codex_maps_standalone",
-          title: "Codex Maps Standalone Reader",
-          version: "0.1.0",
-        },
-      }),
+    sourceId: `standalone-${process.pid}`,
   });
 
   process.stdout.write(`Codex Maps 独立只读地图：${reader.url}\n`);

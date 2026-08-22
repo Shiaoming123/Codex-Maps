@@ -85,6 +85,25 @@ describe("Standalone Map Reader HTTP boundary", () => {
     }
   });
 
+  it("requires the per-launch capability token when one is configured", async () => {
+    const reader = await createStandaloneMapReader({
+      accessToken: "reader-secret",
+      createModule: async () => moduleFor(sourceFor(snapshot())),
+      port: nextPort++,
+    });
+
+    try {
+      await expect(fetch(`${reader.url}/api/snapshot`)).resolves.toMatchObject({ status: 403 });
+      await expect(fetch(`${reader.url}/api/snapshot?token=reader-secret`)).resolves.toMatchObject({
+        status: 200,
+      });
+      const page = await fetch(reader.browserUrl);
+      expect(page.headers.get("content-security-policy")).toContain("script-src 'self'");
+    } finally {
+      await reader.close();
+    }
+  });
+
   it("streams snapshot revisions to a local browser client", async () => {
     const source = sourceFor(snapshot());
     const reader = await createTestReader(source);

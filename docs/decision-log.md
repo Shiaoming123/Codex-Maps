@@ -121,3 +121,9 @@
 边界：该页面不是当前 Codex Desktop 的第二窗口，也没有共享 Desktop 的内存事件源。它只能展示独立连接可见的 Session 列表、基础字段和自身收到的状态通知；Desktop 正在运行的 Turn、置顶顺序、原生导航、Token、计划和子 Agent 一律不伪造。断线时显示最后完整快照与 stale 提示。
 
 原因：这让用户可以立即使用地图界面，同时保留单事件源和宿主兼容性判断的真实性。未来若出现受支持 Host Bridge，只替换页面的数据源 adapter，不重写页面协议或领域模块。
+
+## 2026-08-22 — Electron 作为跨平台独立桌面壳
+
+决定：独立 Reader 以 Electron 主进程托管，先交付 Windows/macOS 共用的源码开发启动；主进程拥有唯一 Reader，安全 BrowserWindow 仅载入其 localhost 页面。当前不配置安装器、自动更新、签名或 Notarization。
+
+原因：这将多窗口、单实例与应用生命周期集中在壳层，核心 `SessionMapModule` 和页面协议不引入平台分支。它不改变 Native Host Gate：Electron 壳仍拥有自己的 App Server，不能描述为已同步 Codex Desktop。

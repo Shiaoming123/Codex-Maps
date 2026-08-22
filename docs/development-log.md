@@ -173,3 +173,49 @@ Python 协议基线将在最终 checkpoint 与 TypeScript 验证一起重跑。�
 - 当前没有自动 reconnect/re-handshake 或 3–5 秒全量对账；断线后只保留 stale 快照，不自动宣称已恢复。
 - 独立 Reader 不进入 mutation、Desktop 导航、项目/置顶同步或 Token/计划/子 Agent 展示。
 - Native Host Gate 仍按 ADR 0002 维持阻塞，未来以受支持 adapter 替换独立数据源。
+
+## 2026-08-22 — Electron 独立桌面壳源码开发切片
+
+### 本轮目标
+
+把已交付的独立 Reader 装入可在 Windows/macOS 使用同一源码启动的 Electron 壳，同时不把该窗口描述为 Codex Desktop 的嵌入或共享实时源。
+
+### 已完成
+
+- 新增 `packages/desktop/`：Electron main process 创建唯一 `createRuntimeReader`，并以 `BrowserWindow` 承载 Reader 的 localhost 页面。
+- 窗口默认启用 `contextIsolation`、sandbox、`webSecurity`，关闭 Node integration、webview、外部导航、新窗口和所有权限请求；Renderer 没有 raw IPC 或文件系统入口。
+- 生命周期模块以可替换 application seam 覆盖单实例锁、second-instance 聚焦、macOS activate、Windows 最后窗口关闭与重复 close；Windows 会等待 Reader 完成关闭才退出。
+- `pnpm start:desktop` 完成 TypeScript 构建并启动 Electron。一次 Windows 开发 smoke 使用显式 Codex executable 和独立端口，Electron 进程存活且首页返回 HTTP 200；未读取或输出任何 Session 内容。
+- 将 Runtime Reader 抽出，浏览器 standalone 与 Electron 入口复用同一启动逻辑；新增交付计划、README 命令、问题状态与决策记录。
+
+### 决策与问题
+
+1. **首版不引入 preload/IPC。** 只读页面完全可通过它已有的 localhost HTTP/SSE 消费快照；保留最小权限面，未来只有真实桌面命令需要时才以窄化 contextBridge 添加 IPC。
+2. **显式路径/PATH 优先于猜测安装位置。** `CODEX_MAPS_CODEX_PATH` 与 PATH 是当前稳定启动合同；Windows/macOS 自动发现必须拿到真实安装与升级证据后再加 platform adapter。
+3. **不提前打包。** Electron 依赖仅用于源码开发启动。Windows 安装器/签名、macOS Apple Silicon codesign/notarization、发布凭据和自动更新都留在独立发布切片。
+4. **导航解析错误按拒绝处理。** 安全测试发现无效 URL 会使 `new URL()` 抛错；窗口回调现捕获该错误并取消导航，而不是让主进程回调异常。
+
+### 验证证据
+
+```text
+pnpm verify
+  TypeScript: pass
+  Vitest: 22 pass, 1 real-environment smoke skipped by default
+  Python: 3 pass
+
+pnpm start:desktop (Windows source smoke)
+  TypeScript build: pass
+  Electron process: running
+  localhost Reader homepage: HTTP 200
+
+pnpm start:desktop (token hardening rerun)
+  Electron listener: running
+  unauthenticated localhost snapshot: HTTP 403
+```
+
+### 剩余门禁
+
+- macOS Apple Silicon 真实机启动与关闭 smoke。
+- Windows 安装/卸载、签名与升级验证。
+- Codex executable 平台发现 adapter；未知路径/版本必须给出可行动诊断，不猜测或修改官方安装。
+- 断线恢复、详情字段和后续只读/写能力仍受现有 App Server 合同与 Native Host Gate 约束。

@@ -6,6 +6,7 @@
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "start:desktop": "pnpm build && electron build/desktop/src/main.js",
     "start:standalone": "pnpm build && node build/standalone/src/main.js",
     "test": "vitest run",
     "test:python": "python -m unittest discover -s tests",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@types/node": "26.2.0",
+    "electron": "^43.4.1",
     "typescript": "7.0.2",
     "vitest": "4.1.11"
   }

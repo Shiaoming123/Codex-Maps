@@ -2,18 +2,32 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import type { SessionMapModule, SessionMapSnapshot } from "../../session-map/src/types.js";
+import { standaloneClientScript } from "./page-client.js";
 import { standalonePage } from "./page.js";
 
 export interface StandaloneMapReaderOptions {
+  accessToken?: string;
   createModule(): Promise<SessionMapModule>;
   host?: string;
   port?: number;
 }
 
 export interface StandaloneMapReader {
+  readonly browserUrl: string;
   readonly url: string;
   close(): Promise<void>;
 }
+
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "connect-src 'self'",
+  "img-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "frame-ancestors 'none'",
+].join("; ");
 
 function snapshotEnvelope(snapshot: SessionMapSnapshot): object {
   return {
@@ -51,17 +65,34 @@ export async function createStandaloneMapReader(
   };
   const unsubscribe = source.subscribe(publishSnapshot);
   const server = createServer((request, response) => {
-    if (request.method === "GET" && request.url === "/") {
-      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      response.end(standalonePage());
+    const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+    if (options.accessToken && requestUrl.searchParams.get("token") !== options.accessToken) {
+      response.writeHead(403, { "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ error: "forbidden" }));
       return;
     }
-    if (request.method === "GET" && request.url === "/api/snapshot") {
+    if (request.method === "GET" && requestUrl.pathname === "/") {
+      response.writeHead(200, {
+        "content-security-policy": CONTENT_SECURITY_POLICY,
+        "content-type": "text/html; charset=utf-8",
+      });
+      response.end(standalonePage(options.accessToken));
+      return;
+    }
+    if (request.method === "GET" && requestUrl.pathname === "/assets/app.js") {
+      response.writeHead(200, {
+        "content-security-policy": CONTENT_SECURITY_POLICY,
+        "content-type": "application/javascript; charset=utf-8",
+      });
+      response.end(standaloneClientScript());
+      return;
+    }
+    if (request.method === "GET" && requestUrl.pathname === "/api/snapshot") {
       response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       response.end(JSON.stringify(snapshotEnvelope(source.getSnapshot())));
       return;
     }
-    if (request.method === "GET" && request.url === "/api/events") {
+    if (request.method === "GET" && requestUrl.pathname === "/api/events") {
       response.writeHead(200, {
         "cache-control": "no-cache",
         connection: "keep-alive",
@@ -84,10 +115,12 @@ export async function createStandaloneMapReader(
     });
   });
   const address = server.address() as AddressInfo;
+  const url = `http://${host}:${address.port}`;
   let closePromise: Promise<void> | null = null;
 
   return {
-    url: `http://${host}:${address.port}`,
+    browserUrl: options.accessToken ? `${url}/?token=${encodeURIComponent(options.accessToken)}` : url,
+    url,
     close() {
       if (!closePromise) {
         unsubscribe();

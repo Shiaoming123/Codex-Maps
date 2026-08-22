@@ -77,6 +77,17 @@ pnpm start:standalone
 
 默认地址为 `http://127.0.0.1:41761`；可通过 `CODEX_MAPS_PORT` 修改。它是 **Codex Maps 自己拥有的只读 App Server**，不与当前 Codex Desktop 共享同一个事件源：Desktop 正在运行的 Turn、置顶顺序、原生导航和其它内存态不会被伪装成已同步。页面会在断线时保留最后完整快照并提示状态可能已变化。
 
+## Electron 独立桌面壳（开发版）
+
+Electron 壳使用同一条独立 Reader 数据源提供 Windows/macOS 的桌面窗口；它不嵌入 Codex Desktop，也不共享其内存状态。
+
+```powershell
+$env:CODEX_MAPS_CODEX_PATH="$env:LOCALAPPDATA\OpenAI\Codex\bin\codex.exe"
+pnpm start:desktop
+```
+
+源码开发版尚未提供安装器、签名、自动更新或 macOS 真实机验证。完整边界与发布门禁见 [Electron 桌面壳交付计划](./docs/desktop-delivery-plan.md)。
+
 Windows Host Bridge 开发前先运行 active-process 探针，避免误用 PATH 中的另一个 CLI：
 
 ```powershell
