@@ -1,65 +1,157 @@
-# 架构说明
+# Codex Maps 架构与兼容性
 
-## 官方依据
+## 1. 架构结论
 
-- [Codex App Server README](https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md)
-- [Codex App Server thread list schema](https://github.com/openai/codex/blob/main/codex-rs/app-server-protocol/schema/json/v2/ThreadListParams.json)
-- [Unlocking the Codex harness: how we built the App Server](https://openai.com/index/unlocking-the-codex-harness/)
-
-## 1. 事实来源
-
-`codex app-server` 是唯一的 Session 权威来源。它通过 stdio 传输 newline-delimited JSON-RPC；连接必须先发送一次 `initialize`，再发送 `initialized`，之后才能调用其他方法。
-
-首版只实现只读 `thread/list`。客户端不扫描 Codex 的 rollout 文件、不解析内部 SQLite，也不以 DOM 结构作为数据 API。
-
-## 2. 分层
+Codex Maps 应实现为“共享核心 + 两个宿主”，而不是两个独立应用：
 
 ```text
-┌─────────────────────────────────────────┐
-│ UI: independent dashboard                │
-│ search / filters / projects / preview    │
-└──────────────────────┬──────────────────┘
-                       │ typed view model
-┌──────────────────────▼──────────────────┐
-│ Organizer service                         │
-│ pagination / capability probe / caching  │
-└──────────────────────┬──────────────────┘
-                       │ JSON-RPC over stdio
-┌──────────────────────▼──────────────────┐
-│ codex app-server                          │
-│ thread / project / section / events      │
-└─────────────────────────────────────────┘
+                         ┌─ Codex 内嵌页（同壳路由）
+Codex app-server         │
+      │                  │
+      ▼                  │
+Host Bridge ──► Session Store ──► Shared React UI
+      │                  │
+      │                  └─ 独立副屏 BrowserWindow
+      ▼
+本地偏好 / 能力与版本记录
 ```
 
-未来的 Windows 适配层只负责启动、版本识别和 UI 壳层注入，不重新实现 Session 数据访问。
+Host Bridge 是唯一的 App Server 连接与写操作出口；两个 renderer 只通过受控 IPC 读取同一个 Store 和发起命令。禁止内嵌页与独立页各自启动 app-server。
 
-## 3. 权威字段与本地字段
+## 2. 产品不是单一 manifest
 
-| 数据 | 来源 | 处理原则 |
-|---|---|---|
-| thread id、标题预览、状态、时间、cwd、归档状态 | app-server | 只读同步，按分页加载 |
-| project / section 归属 | app-server 实验 API | 能力探测后使用，失败时降级 |
-| 颜色、别名、保存的筛选器、布局 | 本地偏好 | 与 thread id 关联，不能覆盖权威字段 |
-| 对话正文 | app-server `thread/read` 或分页 API | 按需加载，不做默认索引，不上传 |
-| 侧栏注入状态 | 本地版本记录 | 绑定 Codex build/version，失配则停止注入 |
+[官方插件架构](https://developers.openai.com/plugins/concepts/plugins)定义了 skills、MCP server 和可选 UI resource；这些能力不能被直接当作“原生左侧路由 API”的证明。完整产品包含：
 
-## 4. 兼容策略
+- Codex plugin package：manifest、skills、未来的用户命令。
+- App Server client：JSON-RPC、分页、事件和 mutation。
+- Session Store：规范化实体、索引、双轴状态和重连校正。
+- Shared UI：一级地图、二级详情、副屏看板和确认弹窗。
+- Codex host adapter：左侧入口、路由、打开具体 Session、同进程独立窗口。
+- Platform adapter：安装发现、路径、窗口、更新、打包和日志目录。
 
-- 协议版本：默认使用稳定 API；实验 API 通过 `initialize.capabilities.experimentalApi` 明确协商。
-- 能力探测：启动后记录 app-server 响应和支持的方法，不根据版本号猜测。
-- 分页：所有列表都保留 `nextCursor`，不能只取首屏。
-- 事件恢复：断线后重新初始化并以 `thread/list` 重新拉取权威快照，不能只依赖缓存事件。
-- 错误：对 `-32001` 等可重试错误使用有限次数的指数退避；其他错误展示原始方法和错误码。
-- 写操作：每个 mutation 都先生成计划，再经用户确认；不提供默认删除动作。
+内嵌宿主适配属于本地桌面扩展能力，必须标记为实验性并绑定已验证 build。
 
-## 5. Windows 私有壳层
+## 3. App Server 边界
 
-这不是普通 plugin manifest 能保证的能力，而是个人使用的本地适配层：
+[Codex App Server](https://developers.openai.com/codex/app-server) 是唯一的 Session 权威来源。默认 stdio 是 MVP 传输方式；官方 WebSocket transport 当前标记为实验且不支持生产，因此不作为首发依赖。
 
-1. 识别当前 Codex Desktop 安装与版本。
-2. 复制到独立目录，使用独立 Electron 用户数据目录。
-3. 在副本中加载管理器 UI 或注入 renderer。
-4. 运行 smoke test：启动、列表、搜索、点击回到 Session、关闭。
-5. 失败时不触碰官方安装，回退到独立管理器。
+连接生命周期：
 
-任何 ASAR/renderer patch 都必须绑定具体版本、保存原始 hash、提供撤销方式，并在 README 中标记为实验性个人功能。
+1. Host Bridge 启动或接管唯一连接。
+2. 发送 `initialize`，声明真实客户端名称和需要的实验能力。
+3. 发送 `initialized`。
+4. 拉取 `thread/list` 分页快照与必要详情。
+5. 持续处理 `thread/*`、`turn/*`、`item/*`、审批/输入和 Token 事件。
+6. 断线后停止 mutation，重新握手，拉取权威快照，再恢复命令入口。
+
+禁止用直接读写 rollout JSONL/SQLite 作为正常降级。只读诊断工具也必须显式说明它读取的是 App Server，而不是私有存储。
+
+## 4. Session Store
+
+建议的核心实体：
+
+```text
+Session
+  id, name, preview, cwd, projectId, sectionId, isPinned, archived
+  sourceKind, parentThreadId, forkedFromId, createdAt, updatedAt
+  executionState, goalState, activeFlags, lastError
+  currentTurn, plan, lastAgentExcerpt, tokenUsage, contextWindow
+  childCount, descendantCount, capabilities, freshness
+```
+
+Store 维护以下索引：project、status、pinned、archived、updatedAt、parent/ancestor。完整 transcript 只在二级页按需读取，不默认常驻，也不写入公开日志。
+
+### 双轴状态归一化
+
+执行状态优先级示例：
+
+1. 系统错误或 Turn failed → `failed`。
+2. `activeFlags` 含等待审批/输入 → `waiting`。
+3. thread status 为 active 或 Turn inProgress → `running`。
+4. thread status 为 idle → `idle`。
+5. notLoaded 或信息不足 → `unknown/notLoaded`。
+
+目标状态独立来自 goal 生命周期或明确的用户标记。`turn/completed` 不能写入 `goalState=complete`。
+
+### 快照与事件校正
+
+- 初始快照带 `snapshotRevision`。
+- 每条事件按 thread/turn/item id 去重并更新 `lastEventAt`。
+- 事件只负责低延迟；分页快照负责最终一致性。
+- 进程恢复、窗口唤醒、网络/管道重连后重新对账。
+- 数据来源和 freshness 对 UI 可见；未知字段保持 null。
+
+## 5. 单写者与双窗口技术门禁
+
+App Server 对 thread history 存在单写者约束，第二个进程即使能读取历史，也可能无法对另一个进程拥有的 thread 执行 archive/delete 等操作。MVP 的第一个技术 Spike 必须证明：
+
+1. Codex host adapter 能访问或转发当前 Codex 使用的权威事件源。
+2. 内嵌 renderer 与副屏 BrowserWindow 能订阅同一 Host Bridge。
+3. 任意 mutation 只经过一个串行命令队列。
+4. 关闭任一窗口不会关闭仍被另一窗口使用的连接。
+
+如果不能证明，内嵌功能必须 fail-closed，不能发布“看起来实时”的双数据源版本。
+
+## 6. 目标代码结构
+
+从当前 Python 诊断片演进到 TypeScript monorepo 时，保持最小分层：
+
+```text
+apps/desktop/                  # Host Bridge 与独立窗口
+packages/app-server-client/    # typed JSON-RPC、能力探测
+packages/session-store/        # 归一化、事件 reducer、selectors
+packages/ui/                   # 两种宿主共享 React UI
+packages/codex-host/           # Codex 路由/窗口/跳转 adapter
+packages/platform/             # Windows/macOS/Linux/WSL
+tests/fixtures/                # 去敏协议 fixtures
+```
+
+建议使用 TypeScript、React、Electron 与 npm workspaces。避免首版引入云后端、数据库服务或多进程消息系统；本地偏好可先使用原子 JSON/轻量 key-value，并通过版本化 schema 管理。
+
+## 7. 跨平台兼容策略
+
+截至 2026-08-22，官方桌面体验覆盖 macOS、Windows，并提供 Linux preview；Linux 对 Wayland 的窗口定位、浮窗、焦点和快捷键仍存在限制。兼容性必须按“协议、宿主、平台、架构、Codex build”五个维度测试。
+
+| 目标 | MVP 策略 | 主要差异 | 退出门禁 |
+|---|---|---|---|
+| Windows 11 x64 | 首发完整支持 | MSIX/WindowsApps 只读、PowerShell、盘符/反斜杠、窗口生命周期 | 内嵌+副屏+5 类 mutation 全链路 |
+| Windows + WSL2 | 独立环境验证 | `C:\`、`/mnt/c`、`\\wsl.localhost` 映射，runner 与 cwd 归属 | 项目筛选和打开 Session 不串路径 |
+| macOS Apple Silicon | 第二验证平台 | `.app` bundle、codesign/notarization、Command 快捷键、arm64 | 共享核心测试全过，host adapter smoke 过 |
+| Linux x64/ARM64 preview | 第三适配 | deb/rpm、Wayland/XWayland、窗口定位和通知限制 | 不依赖固定窗口坐标；受限能力明确降级 |
+
+实现约束：
+
+- 领域层只接受规范化 URI/PathValue，不拼接平台路径。
+- 使用 Node `path.win32`/`path.posix` 或明确的 path adapter，不用字符串替换猜路径。
+- 包产物按 `win32-x64`、`darwin-arm64`、`linux-x64/arm64` 分开构建。
+- 尽量避免原生 Node 依赖；不可避免时按 Electron ABI 和 CPU 架构构建。
+- 快捷键、托盘、通知、多屏坐标和自动启动均由 platform adapter 提供。
+
+官方平台依据：[桌面应用概览](https://developers.openai.com/codex/app)、[Windows 桌面应用](https://learn.chatgpt.com/docs/windows/windows-app)、[Linux 桌面预览](https://learn.chatgpt.com/docs/linux/linux-app)。
+
+## 8. Codex 版本兼容
+
+操作系统兼容不等于 Codex build 兼容。宿主层必须：
+
+- 记录平台、CPU、Codex app version、app-server version 与 host bundle hash。
+- 以能力握手决定 API，不根据版本号猜方法。
+- 以 allowlist 决定是否加载 renderer/路由适配；未知 hash 默认拒绝。
+- 不修改系统安装目录；在用户可控目录构建适配副本或加载受控扩展。
+- 每次 Codex 更新后先跑启动、地图入口、实时状态、跳转和关闭恢复 smoke test。
+
+## 9. 安全与隐私
+
+- mutation 命令队列串行化并带 request id，重连时不自动重放不确定结果。
+- archive/unarchive/rename/pin 显示目标；delete 显示所有 spawned descendants，并要求输入名称确认。
+- 公开日志只记录方法、匿名 id、耗时、错误码和版本，不记录正文、命令输出或凭据。
+- renderer 不直接拥有 app-server stdin、文件系统写权限或任意 shell 权限。
+- 任何 host patch 失败都停止注入，不降级为 DOM 猜测或私有数据库写入。
+
+## 10. 测试金字塔
+
+- 协议单测：JSON-RPC、分页、错误、能力探测、去敏 fixtures。
+- Reducer 单测：乱序/重复事件、重连快照、双轴状态、级联删除通知。
+- UI 组件测试：空/加载/等待/失败/未知、确认弹窗、键盘导航。
+- Host 集成：同一 Store 驱动两个窗口、打开 Session、窗口关闭重开。
+- 平台 smoke：Windows/WSL/macOS/Linux 的路径、窗口、通知和升级门禁。
+- 端到端：真实创建 → 运行 → 等待 → Turn 结束 → 目标完成 → 归档/恢复。

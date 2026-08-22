@@ -13,8 +13,14 @@ venv/
 .pytest_cache/
 
 # Build and OS files
+node_modules/
 dist/
 build/
+coverage/
+.vite/
 *.egg-info/
+.env
+.env.*
+!.env.example
 .DS_Store
 Thumbs.db

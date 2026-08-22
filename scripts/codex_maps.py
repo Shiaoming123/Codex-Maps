@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only Codex Session Organizer client.
+"""Read-only Codex Maps diagnostic client.
 
 The first slice intentionally exposes only thread/list. It keeps all session
 state in codex app-server and does not read or rewrite Codex storage directly.
@@ -13,9 +13,16 @@ import subprocess
 import sys
 from typing import Any, TextIO
 
+DEFAULT_THREAD_SORT_KEY = "updated_at"
+
 
 class AppServerError(RuntimeError):
     """A JSON-RPC error returned by codex app-server."""
+
+
+def build_app_server_command(codex_path: str) -> list[str]:
+    """Build the stable stdio command; stdio is the app-server default."""
+    return [codex_path, "app-server"]
 
 
 def write_message(stream: TextIO, message: dict[str, Any]) -> None:
@@ -81,7 +88,7 @@ def request(
 def list_threads(args: argparse.Namespace) -> dict[str, Any]:
     try:
         process = subprocess.Popen(
-            [args.codex_path, "app-server", "--stdio"],
+            build_app_server_command(args.codex_path),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -94,7 +101,7 @@ def list_threads(args: argparse.Namespace) -> dict[str, Any]:
         ) from error
     except PermissionError as error:
         raise AppServerError(
-            f"Could not execute '{args.codex_path}' because Windows denied access. "
+            f"Could not execute '{args.codex_path}' because the operating system denied access. "
             "Pass an executable path that this shell can run with --codex-path."
         ) from error
 
@@ -105,8 +112,8 @@ def list_threads(args: argparse.Namespace) -> dict[str, Any]:
             "initialize",
             {
                 "clientInfo": {
-                    "name": "codex_session_organizer",
-                    "title": "Codex Session Organizer",
+                    "name": "codex_maps",
+                    "title": "Codex Maps",
                     "version": "0.1.0",
                 }
             },
@@ -117,7 +124,7 @@ def list_threads(args: argparse.Namespace) -> dict[str, Any]:
 
         params: dict[str, Any] = {
             "limit": args.limit,
-            "sortKey": "recency_at",
+            "sortKey": DEFAULT_THREAD_SORT_KEY,
             "sortDirection": "desc",
             "archived": args.archived,
         }
@@ -155,7 +162,7 @@ def print_threads(result: dict[str, Any], as_json: bool) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Read-only Codex Session Organizer CLI")
+    parser = argparse.ArgumentParser(description="Read-only Codex Maps diagnostic CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
     list_parser = subparsers.add_parser("list", help="List stored Codex sessions")
     list_parser.add_argument("--limit", type=int, default=25)

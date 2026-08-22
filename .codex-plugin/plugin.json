@@ -1,19 +1,19 @@
 {
-  "name": "codex-session-organizer",
+  "name": "codex-maps",
   "version": "0.1.0",
-  "description": "A personal, local-first visual organizer for Codex threads.",
+  "description": "A local-first visual map for understanding and managing Codex sessions.",
   "author": {
     "name": "Shiaoming123",
     "url": "https://github.com/Shiaoming123"
   },
-  "repository": "https://github.com/Shiaoming123/codex-session-organizer",
+  "repository": "https://github.com/Shiaoming123/Codex-Maps",
   "license": "MIT",
-  "keywords": ["codex", "sessions", "threads", "productivity", "windows"],
+  "keywords": ["codex", "sessions", "threads", "maps", "productivity"],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Codex Session Organizer",
-    "shortDescription": "Search and organize your Codex sessions.",
-    "longDescription": "A personal local-first organizer for searching, grouping, and safely managing Codex sessions through codex app-server.",
+    "displayName": "Codex Maps",
+    "shortDescription": "See and manage Codex sessions as a live map.",
+    "longDescription": "A local-first visual map for searching, grouping, monitoring, and safely managing Codex sessions through codex app-server.",
     "developerName": "Shiaoming123",
     "category": "Productivity",
     "capabilities": ["Interactive", "Read"],
@@ -22,6 +22,6 @@
       "Find sessions for this project.",
       "Help me organize completed sessions."
     ],
-    "brandColor": "#2563EB"
+    "brandColor": "#4F46E5"
   }
 }
