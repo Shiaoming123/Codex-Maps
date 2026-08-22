@@ -5,6 +5,8 @@
   "type": "module",
   "packageManager": "pnpm@11.19.0",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start:standalone": "pnpm build && node build/standalone/src/main.js",
     "test": "vitest run",
     "test:python": "python -m unittest discover -s tests",
     "test:smoke:app-server": "vitest run packages/session-map/test/real-app-server.smoke.test.ts",

@@ -113,3 +113,11 @@
 约束：每个请求独立超时，超时只表示投递结果未知，不自动重试或重放；通知监听器、关闭监听器的异常不得终止 reader；`dispose()` 可以重复调用，但底层连接只能释放一次。未知或迟到 response 不得错误完成其他请求。
 
 原因：长期连接的并发、乱序响应、server request 拒绝和关闭竞争属于协议复杂度，不能泄漏给 Store 或 UI。集中在可替换 `JsonlConnection` seam 后，Memory fixture 能以确定时序验证，而 `SessionMapModule` 保持领域快照边界。
+
+## 2026-08-22 — 独立只读 Map Reader 可先行交付
+
+决定：在 Native Host Gate 阻塞期间，交付一个只绑定 `127.0.0.1` 的独立浏览器页面。它拥有一条自己的只读 App Server 连接，HTTP 层只消费 `SessionMapModule.observe({ kind: "overview" })` 的完整快照，并以 SSE 推送整个新快照；浏览器不接触 JSONL、协议增量或写操作。
+
+边界：该页面不是当前 Codex Desktop 的第二窗口，也没有共享 Desktop 的内存事件源。它只能展示独立连接可见的 Session 列表、基础字段和自身收到的状态通知；Desktop 正在运行的 Turn、置顶顺序、原生导航、Token、计划和子 Agent 一律不伪造。断线时显示最后完整快照与 stale 提示。
+
+原因：这让用户可以立即使用地图界面，同时保留单事件源和宿主兼容性判断的真实性。未来若出现受支持 Host Bridge，只替换页面的数据源 adapter，不重写页面协议或领域模块。

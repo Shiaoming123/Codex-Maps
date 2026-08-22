@@ -32,9 +32,13 @@
 
 ### CM-004 一级地图与二级详情
 
-状态：`prototype-done / implementation-todo`
+状态：`standalone-reader-done / native-ui-todo`
 
 验收：搜索、分页、项目/cwd、置顶、归档、状态筛选可用；详情显示计划、最近输出摘录、Token/上下文和派生数量；至少 500 个 Session 下仍可操作。
+
+当前进展：已实现 localhost 独立只读 Map Reader：根页面提供标题/预览搜索、执行状态筛选、按 `cwd`（不称为项目）分组和基础详情；`GET /api/snapshot` 返回完整快照，`GET /api/events` 用 SSE 推送后续完整 revision。页面明确标明该源由 Codex Maps 自己持有、未与 Desktop 共享；无原生跳转、写操作、项目/置顶、Token、计划或子 Agent 字段。
+
+当前缺口：分页、可靠项目/Section、置顶与归档、`thread/read` 的详情合同、500 Session 性能、以及共享 Host Bridge UI 都尚未完成。
 
 ### CM-005 实时可观察性
 

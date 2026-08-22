@@ -147,3 +147,29 @@ Python 协议基线将在最终 checkpoint 与 TypeScript 验证一起重跑。�
 - 为 writer 失败、orphan/duplicate response、server request 与本地 request id 碰撞、EOF/release 竞争补充合同测试。
 - 实现 reconnect/re-handshake 和全量 reconcile 后，才能把 disconnected/stale 恢复为 ready。
 - 再进入 `thread/read`、goal/plan/token 与二级详情 reducer；不在此阶段提前接入 UI。
+
+## 2026-08-22 — 独立只读 Map Reader 首次交付
+
+### 本轮目标
+
+在不等待原生左侧嵌入的前提下，提供一个可启动、可查看、会随完整快照更新的独立页面，同时不误导用户它与正在运行的 Codex Desktop 共享实时状态。
+
+### 已完成
+
+- 新增本地 HTTP Reader：`GET /api/snapshot` 返回明确标记 `standalone-app-server / desktopShared:false` 的完整快照；`GET /api/events` 在连接后立即推送当前快照，并在 revision 更新时推送下一份完整快照。
+- 新增零依赖浏览器页面：搜索、执行状态筛选、按工作目录分泳道、卡片选择和基础 Session 详情均消费上述快照；不把 `cwd` 伪装成项目。
+- 页面将 ready、stale/disconnected 和不可连接分别显示为“最新完整快照”“最后完整快照”“无法连接”，不把未知运行态渲染为完成。
+- 新增 `pnpm start:standalone`，默认启动 `127.0.0.1:41761`；本机实际启动后首页 HTTP 200，通过独立 App Server 完成初始化和首份快照。
+- 以 PC 页面流模板新增独立 Reader 流程图，包含启动、就绪和断线三种页面状态。
+
+### 决策与问题
+
+1. **独立页不叫 Desktop 副屏。** 它可以自行展示独立连接数据，但没有证据表明能复用 Desktop 内存事件；文案固定说明未共享连接。
+2. **浏览器只收完整快照。** SSE 不泄漏 JSONL，也不把协议 reducer 分散到 UI。浏览器重连后只需收到最新完整快照，无需 `Last-Event-ID` 回放。
+3. **随机端口会触发浏览器禁用端口。** 测试曾遇到浏览器拒绝随机端口；正式启动改为固定、可配置的 `41761`，测试使用安全端口范围。
+
+### 剩余门禁
+
+- 当前没有自动 reconnect/re-handshake 或 3–5 秒全量对账；断线后只保留 stale 快照，不自动宣称已恢复。
+- 独立 Reader 不进入 mutation、Desktop 导航、项目/置顶同步或 Token/计划/子 Agent 展示。
+- Native Host Gate 仍按 ADR 0002 维持阻塞，未来以受支持 adapter 替换独立数据源。

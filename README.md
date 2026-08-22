@@ -66,6 +66,17 @@ pnpm test:smoke:app-server
 
 默认测试会跳过真实环境 smoke；只有显式设置 `CODEX_MAPS_CODEX_PATH` 才会启动独立、只读的诊断 App Server。该进程仅用于开发验证，不能作为内嵌页或副屏窗口的数据源；正式宿主仍必须复用 Codex Desktop 的唯一 Host Bridge。
 
+## 独立只读地图
+
+可启动一个只绑定本机 `127.0.0.1` 的浏览器页面，按工作目录展示 Session，并通过 SSE 接收这条独立连接的新快照：
+
+```powershell
+$env:CODEX_MAPS_CODEX_PATH="$env:LOCALAPPDATA\OpenAI\Codex\bin\codex.exe"
+pnpm start:standalone
+```
+
+默认地址为 `http://127.0.0.1:41761`；可通过 `CODEX_MAPS_PORT` 修改。它是 **Codex Maps 自己拥有的只读 App Server**，不与当前 Codex Desktop 共享同一个事件源：Desktop 正在运行的 Turn、置顶顺序、原生导航和其它内存态不会被伪装成已同步。页面会在断线时保留最后完整快照并提示状态可能已变化。
+
 Windows Host Bridge 开发前先运行 active-process 探针，避免误用 PATH 中的另一个 CLI：
 
 ```powershell
@@ -114,6 +125,7 @@ python .\scripts\codex_maps.py list --codex-path "$env:LOCALAPPDATA\OpenAI\Codex
 - [Session Map 模块 ADR](./docs/adr/0001-session-map-module.md)
 - [Host Bridge 与发布边界 ADR](./docs/adr/0002-host-bridge-and-release-boundary.md)
 - [PC 页面流原型](./docs/prototypes/codex-maps-flow.html)
+- [独立只读 Map Reader 页面流](./docs/prototypes/codex-maps-standalone-reader-flow.html)
 
 官方技术依据：[Codex App Server](https://developers.openai.com/codex/app-server)、[App Server 开源协议说明](https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md)、[Codex harness 介绍](https://openai.com/index/unlocking-the-codex-harness/)。
 
