@@ -172,10 +172,10 @@
 - [x] Add source-development shortcut create/remove and migration checks; full app installer remains a release gate.
 - [x] Verify the smoke uses only a temporary synthetic Session directory and does not modify a Codex installation path.
 - [x] Add a Windows x64 portable Electron directory package with `.build-provenance.json` and a real packaged launch/close smoke.
-- [ ] Record release provenance and commit only after artifact and live startup checks pass.
+- [x] Record portable-package provenance and commit only after artifact and live startup checks pass.
 
 ## Plan Review
 
 - Covered: fast launch/loading, real execution status, token/context visibility, search/history usability, freshness, capability boundaries, relationship visualization, and platform delivery.
 - Intentionally not promised: native Codex sidebar attachment, private IPC, DOM/ASAR injection, guessed navigation, destructive writes through private files, or fabricated completion percentages.
-- Current execution point: Task 7; portable Windows artifact and stdio crash guard are complete, while installer/signing/macOS release gates remain pending.
+- Current execution point: Task 7; portable Windows artifact, deterministic provenance, and stdio crash guard are complete, while installer/signing/macOS release gates remain pending.

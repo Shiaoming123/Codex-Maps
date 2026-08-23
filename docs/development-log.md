@@ -297,7 +297,7 @@ pnpm start:desktop (token hardening rerun)
 
 ### 当前发布状态
 
-Windows 源码开发启动入口可重复验证；正式安装器、安装/卸载产品流程、代码签名、自动更新、macOS Apple Silicon 真机 smoke 和 release provenance 仍未完成，不能称为正式分发版本。
+Windows 源码开发启动入口可重复验证；Windows x64 便携包的 provenance 已在干净提交上验证。正式安装器、安装/卸载产品流程、代码签名、自动更新、macOS Apple Silicon 真机 smoke 和正式分发 release provenance 仍未完成，不能称为正式分发版本。
 
 ## 2026-08-22 — Reader 能力契约门禁
 
@@ -340,3 +340,4 @@ Windows 源码开发启动入口可重复验证；正式安装器、安装/卸�
 - 新增真实子进程回归测试：子进程主动关闭 stdin，发送 32 MiB 数据时原测试产生未处理 `write EOF`，修复后测试无 unhandled error 且 Promise 正确拒绝。
 - 新增 Windows x64 便携目录包：`pnpm package:windows:portable`；新增真实启动/关闭 smoke：`pnpm smoke:windows:portable`。
 - 产物写入 `.build-provenance.json`，记录版本、Electron 版本、平台、架构、源 commit 和 dirty 状态，不写入 Session 内容。
+- 修正 PowerShell 空 Git 输出处理；dirty 状态现在始终是布尔值，并在提交 `30fd2bc` 的干净工作区复验为 `false`。
