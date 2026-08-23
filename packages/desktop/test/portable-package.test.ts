@@ -27,6 +27,7 @@ describe("Windows portable package boundary", () => {
       expect(appPackage).toMatchObject({ main: "build/desktop/src/main.js", private: true });
       const provenance = JSON.parse(await readFile(join(packageDirectory, "resources", "app", ".build-provenance.json"), "utf8"));
       expect(provenance).toMatchObject({ schemaVersion: 1, platform: "win32", appVersion: "0.1.0" });
+      expect(typeof provenance.sourceDirty).toBe("boolean");
       expect(JSON.stringify(provenance)).not.toContain("session");
     } finally {
       await rm(outputDirectory, { recursive: true, force: true });

@@ -48,8 +48,9 @@ Remove-Item -LiteralPath $electronExecutable -Force
 
 $packageMetadata = Get-Content -Raw (Join-Path $projectDirectory 'package.json') | ConvertFrom-Json
 $electronMetadata = Get-Content -Raw (Join-Path $electronDirectory '..\package.json') | ConvertFrom-Json
-$sourceCommit = (& git -C $projectDirectory rev-parse HEAD 2>$null).Trim()
-$sourceDirty = [bool]((& git -C $projectDirectory status --porcelain 2>$null).Trim())
+$sourceCommit = (& git -C $projectDirectory rev-parse HEAD 2>$null | Out-String).Trim()
+$statusOutput = (& git -C $projectDirectory status --porcelain 2>$null | Out-String).Trim()
+$sourceDirty = $statusOutput.Length -gt 0
 $provenance = [ordered]@{
   schemaVersion = 1
   appVersion = [string]$packageMetadata.version
