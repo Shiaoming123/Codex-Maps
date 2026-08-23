@@ -24,7 +24,7 @@
 
 当前进展：单 reader pump 已替代每个 request 自行读取 iterator；response、notification 和 server request 从同一输入流分类。抽出的 UI 无关 `AppServerClient` 已验证并发 request 的倒序 response 仍按 request id 各自完成；每个请求独立 timeout，不影响后续请求；EOF 和重复 dispose 都只 release 底层连接一次。`thread/status/changed` 可发布新 revision，初始化分页期间到达的通知不会丢失；意外 EOF 保留最后快照并发布 disconnected/stale；未知 server request 返回原 ID 的 `-32601`，绝不自动批准。
 
-当前缺口：writer queue 的写失败合同、orphan/duplicate response 诊断事件、stderr 摘要、重新 acquire/握手、`thread/read` 和其余通知 reducer 尚未完成，因此仍不可称为生产级客户端。
+当前缺口：orphan/duplicate response 诊断事件、stderr 摘要、重新 acquire/握手、`thread/read` 和其余通知 reducer 尚未完成，因此仍不可称为生产级客户端。stdio writer 已补充子进程/stdin 错误监听；管道关闭现在以 rejected Promise 传播，不再以未处理 `EPIPE`/`EOF` 崩溃主进程。
 
 ### CM-003 规范化 Session Store
 
@@ -40,7 +40,7 @@
 
 当前进展：已实现 localhost 独立只读 Map Reader：根页面提供搜索、执行状态筛选、按 `cwd`（不称为项目）分组和基础详情；`GET /api/snapshot` 返回完整快照，`GET /api/events` 用 SSE 推送后续完整 revision。默认的本机 JSONL 兼容源可观察当前 Desktop 写入的 `running`、`completed`、`interrupted` 状态；首次历史索引期间先显示 loading，完成后进入 ready；页面详情显示已验证的标题、Token/上下文字段；500+ session 合成索引通过；页面明确标记它不是共享 Desktop 连接。无原生跳转、写操作、项目/置顶、计划或子 Agent 字段。
 
-当前缺口：分页、可靠项目/Section、置顶与归档、Token/计划详情、Fork/子 Agent 关系、以及共享 Host Bridge UI 都尚未完成。
+当前缺口：分页、可靠项目/Section、置顶与归档、计划详情、以及共享 Host Bridge UI 都尚未完成；Fork/子 Agent 已完成有界关系视图，但当前 filesystem-compat 源明确不可用。
 
 ### CM-005 实时可观察性
 
@@ -100,7 +100,7 @@
 
 当前进展：Electron main process 复用 Reader，将其唯一 localhost 页面加载进 sandboxed BrowserWindow；拒绝权限请求、外部导航与新窗口。已覆盖单实例、Windows 最后窗口关闭前释放 Reader，以及重复窗口请求聚焦。`pnpm start:desktop` 用于源码开发启动；Windows 用户可运行 `pnpm shortcut:windows` 创建无终端的桌面快捷方式。
 
-当前缺口：Windows 安装/卸载 smoke、macOS Apple Silicon 真实启动、Codex 可执行文件发现 adapter、安装器、签名/notarization 与自动更新尚未进入实现，因此不能称为可分发桌面应用。
+当前缺口：正式 Windows 安装/卸载、macOS Apple Silicon 真实启动、Codex 可执行文件发现 adapter、签名/notarization 与自动更新尚未进入实现，因此不能称为正式分发桌面应用。已新增 Windows x64 便携目录打包、产物 provenance、启动/关闭 smoke，以及源码快捷方式生命周期检查。
 
 页面进展：独立 Reader 首页已改为工作区泳道地图、筛选和按需详情抽屉；真实工作区/项目语义仍由 CM-101 的受支持数据源门禁决定。
 
@@ -128,7 +128,7 @@
 
 ### CM-104 WSL2 兼容
 
-状态：`todo`
+状态：`doing / bounded-view-done`
 
 验收：保存并比较路径时保留 source environment；`C:\`、`/mnt/c`、UNC 不误判为同一目录；项目筛选、打开 Session 和详情路径均正确。
 
@@ -138,7 +138,9 @@
 
 状态：`todo`
 
-验收：节点关系有明确来源与置信度；区分用户 Fork 与 spawned subAgent；支持至少两层展开；能力缺失时退回列表，不从标题猜关系。
+当前进展：关系 reducer 只消费 `forkedFromId` 与 `parentThreadId`，为已知节点生成带 source/kind/confidence 的 Fork 或 child-agent 边；父节点缺失进入 unresolved，冲突记录隐藏相关边。Standalone 页面提供根节点 + 直接父/子分支的有界二级视图，能力缺失时退回列表语义，不从标题猜关系。
+
+剩余缺口：两层以上的关系展开、完整 parent/ancestor 查询和真实 App Server 关系源的跨版本 smoke。
 
 ### CM-202 Linux x64/ARM64 preview
 

@@ -327,3 +327,16 @@ Windows 源码开发启动入口可重复验证；正式安装器、安装/卸�
 ### 验证
 
 4 个关系 reducer 合成测试覆盖 Fork、子 Agent、缺失父节点和冲突记录；App Server 归一化测试覆盖 parent/Agent 字段；Standalone 页面合约覆盖关系入口和降级文案。测试不使用真实 Session 内容。
+
+## 2026-08-23 — 便携版启动与 EPIPE 管道故障修复
+
+### 问题
+
+用户启动 Windows 便携版时看到 Electron 主进程 `write EPIPE`。默认 filesystem-compat 启动路径本身可以正常启动；故障反馈对应的是 App Server stdio 管道关闭后的写入竞态。
+
+### 修复与验证
+
+- `StdioAppServerAdapter` 现在监听子进程和 stdin 的 error 事件，先记录传输终态，再让 `send()` 以 rejection 返回；释放流程完成后才移除监听器。
+- 新增真实子进程回归测试：子进程主动关闭 stdin，发送 32 MiB 数据时原测试产生未处理 `write EOF`，修复后测试无 unhandled error 且 Promise 正确拒绝。
+- 新增 Windows x64 便携目录包：`pnpm package:windows:portable`；新增真实启动/关闭 smoke：`pnpm smoke:windows:portable`。
+- 产物写入 `.build-provenance.json`，记录版本、Electron 版本、平台、架构、源 commit 和 dirty 状态，不写入 Session 内容。

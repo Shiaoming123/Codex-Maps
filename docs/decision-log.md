@@ -151,3 +151,11 @@
 原因：关系可视化的价值在于解释“从哪里分支”，而不是让布局看起来完整。标题、工作目录、更新时间和摘要都不是父子关系证据，因此不能作为推断依据。
 
 影响：App Server Reader 的 HTTP/SSE envelope 现在包含关系图数据；独立页面提供二级“关系地图”视图。filesystem-compat 没有关系能力，仍显示明确的不可用降级。当前实现是根节点 + 直接父/子分支的有界视图，不引入自由力导向图或关系编辑。
+
+## 2026-08-23 — 便携包与 stdio 管道错误必须 fail-safe
+
+决定：Windows MVP 先提供不依赖安装器的 x64 便携目录包，使用仓库内 Electron runtime、`resources/app` 和构建 provenance；正式安装器、签名和自动更新继续单独验收。App Server stdio 连接必须监听子进程和 stdin 的错误事件，管道关闭以可处理的 Promise rejection 传播。
+
+原因：用户实际启动便携包时观察到主进程因 `write EPIPE` 崩溃。最小复现证明子进程关闭输入管道后，大量写入会触发 Windows `write EOF` 未处理异常；仅检查 `stdin.destroyed` 存在关闭竞态，不能作为安全门禁。
+
+验证：新增 stdio 回归测试和 Windows 便携包产物测试；`pnpm smoke:windows:portable` 已验证真实 Electron 可启动并关闭，便携包内包含 `resources/app/build/desktop/src/main.js` 与 `.build-provenance.json`。便携包仍不是签名安装器，也不改变 Native Host Gate。

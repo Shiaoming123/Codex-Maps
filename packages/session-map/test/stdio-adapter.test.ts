@@ -28,4 +28,24 @@ describe("StdioAppServerAdapter", () => {
 
     await connection.release();
   });
+
+  it("turns a closed child input pipe into a rejected send instead of an uncaught EPIPE", async () => {
+    const closingProgram = [
+      "process.stdin.resume();",
+      "process.stdin.destroy();",
+      "setTimeout(() => {}, 1_000);",
+    ].join("");
+    const adapter = new StdioAppServerAdapter({
+      command: process.execPath,
+      args: ["-e", closingProgram],
+    });
+
+    const connection = await adapter.acquire();
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await expect(connection.send("x".repeat(32 * 1024 * 1024))).rejects.toThrow();
+    } finally {
+      await connection.release();
+    }
+  });
 });

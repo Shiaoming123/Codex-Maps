@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start:desktop": "pnpm build && electron build/desktop/src/main.js",
+    "package:windows:portable": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows-portable.ps1",
+    "smoke:windows:portable": "pnpm package:windows:portable && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-portable-windows.ps1",
     "smoke:standalone": "pnpm build && node scripts/smoke-standalone.mjs",
     "start:standalone": "pnpm build && node build/standalone/src/main.js",
     "shortcut:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-windows-shortcut.ps1",

@@ -43,9 +43,16 @@ export class StdioAppServerAdapter implements AppServerAdapter {
     child.stderr.resume();
 
     let released = false;
+    let transportError: Error | null = null;
     const markInactive = () => {
       this.#active = false;
     };
+    const markTransportError = (error: Error) => {
+      transportError = error;
+      markInactive();
+    };
+    child.on("error", markTransportError);
+    child.stdin.on("error", markTransportError);
     child.once("exit", markInactive);
 
     return {
@@ -57,6 +64,9 @@ export class StdioAppServerAdapter implements AppServerAdapter {
         },
       },
       send: async (line) => {
+        if (transportError) {
+          throw transportError;
+        }
         if (released || child.stdin.destroyed || !child.stdin.writable) {
           throw new Error("Cannot write to a released App Server connection");
         }
@@ -78,6 +88,8 @@ export class StdioAppServerAdapter implements AppServerAdapter {
           child,
           this.#options.shutdownTimeoutMs ?? 2_000,
         );
+        child.removeListener("error", markTransportError);
+        child.stdin.removeListener("error", markTransportError);
         child.removeListener("exit", markInactive);
         this.#active = false;
       },

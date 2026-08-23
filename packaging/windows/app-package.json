@@ -1,0 +1,6 @@
+{
+  "name": "codex-maps-portable",
+  "version": "0.1.0",
+  "private": true,
+  "main": "build/desktop/src/main.js"
+}
